@@ -1,0 +1,315 @@
+[
+  {
+    "id": "proj_drama_1792426566532",
+    "title": "กรรมของคนหลงไฟ (Grok AI 9:16 480p)",
+    "topic": "ละครคุณธรรมดราม่าครอบครัว: ผู้ชายติดเที่ยวไม่ทำงาน มีภรรยาน้อย ไม่สนใจลูกเมียที่บ้าน สุดท้ายภรรยาหลวงพาลูกหนี ส่วนภรรยาน้อยก็หลอกสูบเงินจนหมดตัว ทิ้งให้เขานั่งร้องไห้ไม่เหลืออะไรเลย",
+    "genre": "Emotional Family Drama / ละครคุณธรรมสะท้อนสังคม",
+    "visualStyle": "Thai TV Moral Drama Cinematic style, realistic lighting, high emotional contrast, shallow depth of field, 8k",
+    "aspectRatio": "9:16",
+    "language": "th",
+    "characterLock": "Thai man aged 35 named Nop, handsome but arrogant expression, wearing flashy silk party shirt; Thai wife aged 32 named Lin, gentle and exhausted face, plain modest home clothes",
+    "createdAt": "2026-10-19T16:16:06.532Z",
+    "updatedAt": "2026-10-20T08:03:50.508Z",
+    "finalRenderUrl": "/outputs/renders/shortfilm_proj_drama_1792426566532_1792483294365.mp4",
+    "scenes": [
+      {
+        "id": "scene_drama_1",
+        "sceneNumber": 1,
+        "title": "ซีนที่ 1: หลงแสงสีและภรรยาน้อย",
+        "duration": 6,
+        "narration": "นพ ชายหนุ่มที่เอาแต่ติดเที่ยวกลางคืน ไม่ยอมทำงานทำการ เขานำเงินก้อนสุดท้ายของครอบครัวไปเปย์เมียน้อยในผับหรูอย่างไม่ไยดีลูกเมีย",
+        "imagePrompt": "Cinematic medium shot in a luxury neon nightclub, a 35-year-old Thai man in a flashy silk shirt laughing and pouring drinks with a glamorous young mistress in a red dress, throwing cash on table, moody neon magenta and blue lighting, realistic 8k",
+        "videoPrompt": "Slow push-in camera movement inside neon VIP nightclub lounge, sparkling champagne glasses, arrogant laughter",
+        "cameraMotion": "zoom_in",
+        "imageStatus": "approved",
+        "imageUrl": "/outputs/images/grok_thumb_scene_drama_1_TdkGELLVNR.jpg",
+        "audioStatus": "ready",
+        "audioUrl": "/outputs/audio/aud_proj_drama_1792426566532_scene_drama_1_1792426576384.mp3",
+        "videoStatus": "ready",
+        "videoUrl": "/outputs/videos/grok_vid_scene_drama_1_TdkGELLVNR.mp4",
+        "characterIds": [
+          "char_nop",
+          "char_mistress"
+        ],
+        "continueFromPrev": false,
+        "startKeyframeUrl": "/outputs/images/grok_thumb_scene_drama_1_TdkGELLVNR.jpg",
+        "ttsPhoneticText": "นพ ... ชายหนุ่มที่เอาแต่ติดเที่ยวกลางคืน ... ไม่ยอมทำงานทำการ ... เขานำเงินก้อนสุดท้ายของครอบครัวไปเปย์เมียน้อยในผับหรูอย่างไม่-ไย-ดีลูกเมีย",
+        "thaiQcStatus": "verified",
+        "thaiQcNotes": [
+          "พบคำสแลง \"เปย์\" — แนะนำใช้คำอ่านชัดเจนหรือคำว่า \"ปรนเปรอ\" เพื่อให้เสียงพากย์ไม่เพี้ยน"
+        ],
+        "thaiGrammarScore": 98,
+        "faceQcPassed": true,
+        "firstFrameUrl": "/outputs/frames/first_scene_drama_1_1792483290913.jpg",
+        "lastFrameUrl": "/outputs/frames/last_scene_drama_1_1792483290913.jpg"
+      },
+      {
+        "id": "scene_drama_2",
+        "sceneNumber": 2,
+        "title": "ซีนที่ 2: น้ำตาของภรรยาที่บ้าน",
+        "duration": 6,
+        "narration": "ในขณะที่เขากำลังเริงร่า ลิน ภรรยาคู่ทุกข์คู่ยากต้องนั่งเย็บผ้าหาเลี้ยงลูกน้อยเพียงลำพัง ท่ามกลางบิลหนี้สินที่กองเต็มโต๊ะ",
+        "imagePrompt": "Emotional cinematic shot inside a dimly lit modest Thai house at night, a tired 32-year-old Thai mother in plain clothes crying quietly beside a sleeping young child, overdue debt bills on wooden table, warm sad lamp light, 8k",
+        "videoPrompt": "Slow pan right across overdue bills to the exhausted mother wiping her tears beside her sleeping child",
+        "cameraMotion": "pan_right",
+        "imageStatus": "approved",
+        "imageUrl": "/outputs/images/grok_thumb_scene_drama_2_N2m7p106D9.jpg",
+        "audioStatus": "ready",
+        "audioUrl": "/outputs/audio/aud_proj_drama_1792426566532_scene_drama_2_1792426577646.mp3",
+        "videoStatus": "ready",
+        "videoUrl": "/outputs/videos/grok_vid_scene_drama_2_N2m7p106D9.mp4",
+        "characterIds": [
+          "char_lin"
+        ],
+        "continueFromPrev": true,
+        "startKeyframeUrl": "/outputs/frames/last_scene_drama_1_1792483275192.jpg",
+        "ttsPhoneticText": "ในขณะที่เขากำลังเริงร่า ... ลิน ... พัน-ระ-ยาคู่ทุกข์คู่ยากต้องนั่งเย็บผ้าหาเลี้ยงลูกน้อยเพียงลำพัง ... ท่ามกลางบิลหนี้สินที่กองเต็มโต๊ะ",
+        "thaiQcStatus": "verified",
+        "thaiQcNotes": [
+          "ไวยากรณ์ไทยถูกต้อง ตัวสะกดและอักขระชัดเจน พร้อมพากย์เสียง"
+        ],
+        "thaiGrammarScore": 98,
+        "faceQcPassed": true,
+        "firstFrameUrl": "/outputs/frames/first_scene_drama_2_1792483291648.jpg",
+        "lastFrameUrl": "/outputs/frames/last_scene_drama_2_1792483291648.jpg"
+      },
+      {
+        "id": "scene_drama_3",
+        "sceneNumber": 3,
+        "title": "ซีนที่ 3: ฟางเส้นสุดท้าย",
+        "duration": 6,
+        "narration": "เมื่อนพกลับมาบ้านในสภาพเมาแอ๋และตะคอกใส่ครอบครัว ลินจึงตัดสินใจเด็ดขาด เก็บกระเป๋าพาลูกน้อยเดินออกจากชีวิตเขาไปตลอดกาล",
+        "imagePrompt": "Dramatic doorway shot at dawn, the heartbroken Thai wife holding her young child hand and carrying a suitcase walking away from the house, while the drunken husband in silk shirt stands stunned in the doorway, cinematic lighting, 8k",
+        "videoPrompt": "Slow zoom out as the wife and child walk away into the morning mist, leaving the husband behind",
+        "cameraMotion": "zoom_out",
+        "imageStatus": "approved",
+        "imageUrl": "/outputs/images/grok_thumb_scene_drama_3_0eKAEFYTfW.jpg",
+        "audioStatus": "ready",
+        "audioUrl": "/outputs/audio/aud_proj_drama_1792426566532_scene_drama_3_1792426578568.mp3",
+        "videoStatus": "ready",
+        "videoUrl": "/outputs/videos/grok_vid_scene_drama_3_0eKAEFYTfW.mp4",
+        "characterIds": [
+          "char_nop",
+          "char_lin"
+        ],
+        "continueFromPrev": true,
+        "startKeyframeUrl": "/outputs/frames/last_scene_drama_2_1792483276640.jpg",
+        "ttsPhoneticText": "เมื่อนพกลับมาบ้านในสภาพเมาแอ๋และตะคอกใส่ครอบครัว ... ลินจึงตัดสินใจเด็ดขาด ... เก็บกระเป๋าพาลูกน้อยเดินออกจากชีวิตเขาไปตลอดกาล",
+        "thaiQcStatus": "verified",
+        "thaiQcNotes": [
+          "ไวยากรณ์ไทยถูกต้อง ตัวสะกดและอักขระชัดเจน พร้อมพากย์เสียง"
+        ],
+        "thaiGrammarScore": 98,
+        "faceQcPassed": true,
+        "firstFrameUrl": "/outputs/frames/first_scene_drama_3_1792483292270.jpg",
+        "lastFrameUrl": "/outputs/frames/last_scene_drama_3_1792483292270.jpg"
+      },
+      {
+        "id": "scene_drama_4",
+        "sceneNumber": 4,
+        "title": "ซีนที่ 4: ธาตุแท้ของภรรยาน้อย",
+        "duration": 6,
+        "narration": "ไม่นานหลังจากนั้น เมื่อเงินเก็บถูกผลาญจนเกลี้ยงและบ้านถูกยึด ภรรยาน้อยก็สะบัดหน้าหนีไปขึ้นรถหรูกับผู้ชายคนใหม่ทันที",
+        "imagePrompt": "Cinematic street scene outside an upscale condo, the glamorous mistress in red dress coldly pushing away the broke Thai man and getting into a luxury sports car with a wealthy older man, harsh daylight, 8k realistic",
+        "videoPrompt": "Pan left following the mistress walking away in disgust toward the luxury sports car, leaving Nop on the pavement",
+        "cameraMotion": "pan_left",
+        "imageStatus": "approved",
+        "imageUrl": "/outputs/images/grok_thumb_scene_drama_4_jUcbZ08LD0.jpg",
+        "audioStatus": "ready",
+        "audioUrl": "/outputs/audio/aud_proj_drama_1792426566532_scene_drama_4_1792426579358.mp3",
+        "videoStatus": "ready",
+        "videoUrl": "/outputs/videos/grok_vid_scene_drama_4_jUcbZ08LD0.mp4",
+        "characterIds": [
+          "char_nop",
+          "char_mistress"
+        ],
+        "continueFromPrev": true,
+        "startKeyframeUrl": "/outputs/frames/last_scene_drama_3_1792483276872.jpg",
+        "ttsPhoneticText": "ไม่นานหลังจากนั้น ... เมื่อเงินเก็บถูกผลาญจนเกลี้ยงและบ้านถูกยึด ... พัน-ระ-ยาน้อยก็สะบัดหน้าหนีไปขึ้นรถหรูกับผู้ชายคนใหม่ทันที",
+        "thaiQcStatus": "verified",
+        "thaiQcNotes": [
+          "ไวยากรณ์ไทยถูกต้อง ตัวสะกดและอักขระชัดเจน พร้อมพากย์เสียง"
+        ],
+        "thaiGrammarScore": 98,
+        "faceQcPassed": true,
+        "firstFrameUrl": "/outputs/frames/first_scene_drama_4_1792483292906.jpg",
+        "lastFrameUrl": "/outputs/frames/last_scene_drama_4_1792483292906.jpg"
+      },
+      {
+        "id": "scene_drama_5",
+        "sceneNumber": 5,
+        "title": "ซีนที่ 5: วันที่ไม่เหลืออะไรเลย",
+        "duration": 7,
+        "narration": "สุดท้าย นพในสภาพตกอับต้องนั่งกอดรูปถ่ายครอบครัวร้องไห้อยู่ข้างถนนท่ามกลางสายฝน กว่าจะรู้คุณค่าของคนที่รัก ก็ในวันที่ไม่เหลืออะไรอีกแล้ว",
+        "imagePrompt": "Heartbreaking cinematic wide shot in heavy pouring rain at night on a lonely street sidewalk, the disheveled broke Thai man sitting on the wet ground crying and clutching a crumpled family photo, cold blue rain, dramatic streetlamp, 8k",
+        "videoPrompt": "Slow dramatic zoom out in heavy pouring rain as the broken man weeps alone under a flickering streetlamp",
+        "cameraMotion": "zoom_out",
+        "imageStatus": "approved",
+        "imageUrl": "/outputs/images/grok_thumb_scene_drama_5_MBrnFggDCm.jpg",
+        "audioStatus": "ready",
+        "audioUrl": "/outputs/audio/aud_proj_drama_1792426566532_scene_drama_5_1792426580278.mp3",
+        "videoStatus": "ready",
+        "videoUrl": "/outputs/videos/grok_vid_scene_drama_5_MBrnFggDCm.mp4",
+        "characterIds": [
+          "char_nop"
+        ],
+        "continueFromPrev": true,
+        "startKeyframeUrl": "/outputs/frames/last_scene_drama_4_1792483277147.jpg",
+        "ttsPhoneticText": "สุดท้าย ... นพในสภาพตกอับต้องนั่งกอดรูปถ่ายครอบครัวร้องไห้อยู่ข้างถนนท่ามกลางสายฝน ... กว่าจะรู้คุณค่าของคนที่รัก ... ก็ในวันที่ไม่เหลืออะไรอีกแล้ว",
+        "thaiQcStatus": "verified",
+        "thaiQcNotes": [
+          "ไวยากรณ์ไทยถูกต้อง ตัวสะกดและอักขระชัดเจน พร้อมพากย์เสียง"
+        ],
+        "thaiGrammarScore": 98,
+        "faceQcPassed": true,
+        "firstFrameUrl": "/outputs/frames/first_scene_drama_5_1792483293606.jpg",
+        "lastFrameUrl": "/outputs/frames/last_scene_drama_5_1792483293606.jpg"
+      }
+    ],
+    "subtitleUrl": "/outputs/renders/shortfilm_proj_drama_1792426566532_1792483294365.srt",
+    "characters": [
+      {
+        "id": "char_nop",
+        "name": "นพ (สามีผู้หลงผิด)",
+        "role": "ตัวเอกชาย (Protagonist)",
+        "age": "35 ปี",
+        "visualDna": "35-year-old Thai man named Nop, sharp jawline, shortneat dark hair, wearing burgundy patterned silk party shirt, distinct facial structure",
+        "faceImageUrl": "/outputs/images/grok_thumb_scene_drama_1_TdkGELLVNR.jpg",
+        "magnificRefId": "",
+        "faceLockActive": true
+      },
+      {
+        "id": "char_lin",
+        "name": "ลิน (ภรรยาผู้เสียสละ)",
+        "role": "ภรรยาหลวง (Wife)",
+        "age": "32 ปี",
+        "visualDna": "32-year-old gentle Thai woman named Lin, oval face, tied-back dark hair, modest cream cotton home blouse, warm expressive eyes",
+        "faceImageUrl": "/outputs/images/grok_thumb_scene_drama_2_N2m7p106D9.jpg",
+        "magnificRefId": "",
+        "faceLockActive": true
+      },
+      {
+        "id": "char_mistress",
+        "name": "แพรว (ภรรยาน้อย)",
+        "role": "ภรรยาน้อย (Mistress)",
+        "age": "24 ปี",
+        "visualDna": "24-year-old glamorous Thai woman named Praew, long wavy dark hair, red evening dress, bold makeup, gold earrings",
+        "faceImageUrl": "/outputs/images/grok_thumb_scene_drama_4_jUcbZ08LD0.jpg",
+        "magnificRefId": "",
+        "faceLockActive": true
+      }
+    ]
+  },
+  {
+    "id": "proj_demo_01",
+    "title": "ความลับของหอนาฬิกาข้ามเวลา (The Chrono Clocktower)",
+    "topic": "เด็กหนุ่มช่างซ่อมนาฬิกาค้นพบว่านาฬิกาพกโบราณสามารถหยุดเวลาได้ 10 วินาที แต่ทุกครั้งที่ใช้ ความทรงจำของเขาจะหายไป 1 เรื่อง",
+    "genre": "Sci-Fi / Fantasy Drama",
+    "visualStyle": "Cinematic Unreal Engine 5, moody warm amber & teal lighting, shallow depth of field, 8k",
+    "aspectRatio": "16:9",
+    "language": "th",
+    "characterLock": "Young Thai male watchmaker, 22 years old, wearing vintage leather apron and round spectacles, messy dark hair, warm expressive eyes",
+    "createdAt": "2026-10-19T15:09:30.188Z",
+    "updatedAt": "2026-10-19T15:10:25.177Z",
+    "finalRenderUrl": "/outputs/renders/shortfilm_proj_demo_01_1792422623444.mp4",
+    "scenes": [
+      {
+        "id": "scene_1",
+        "sceneNumber": 1,
+        "title": "ร้านนาฬิกายามค่ำคืน",
+        "duration": 5,
+        "narration": "ในตรอกเล็กๆ ที่เวลาเหมือนเดินช้ากว่าโลกภายนอก คีตะกำลังซ่อมนาฬิกาพกเรือนเก่าที่ไม่มีเข็มวินาที",
+        "imagePrompt": "Cinematic medium shot of a young male watchmaker, 22 years old, wearing vintage leather apron and round spectacles, examining a glowing antique brass pocket watch on a wooden workbench filled with gears, warm amber lamp light, teal shadows, 8k film grain",
+        "videoPrompt": "Slow push-in camera movement, dust motes floating in warm golden light, the antique pocket watch begins to glow softly with blue arcane energy",
+        "cameraMotion": "zoom_in",
+        "imageStatus": "approved",
+        "imageUrl": "/outputs/images/img_proj_demo_01_scene_1_1792422585214.jpg",
+        "audioStatus": "ready",
+        "audioUrl": "/outputs/audio/aud_proj_demo_01_scene_1_1792422594285.mp3",
+        "videoStatus": "ready",
+        "videoUrl": "/outputs/videos/vid_proj_demo_01_scene_1_1792422585214.mp4",
+        "characterIds": [
+          "char_main_1"
+        ],
+        "continueFromPrev": false,
+        "startKeyframeUrl": "/outputs/images/img_proj_demo_01_scene_1_1792422585214.jpg",
+        "ttsPhoneticText": "ในตรอกเล็กๆ ... ที่เวลาเหมือนเดินช้ากว่าโลกภายนอก ... คีตะกำลังซ่อมนาฬิกาพกเรือนเก่าที่ไม่มีเข็มวินาที",
+        "thaiQcStatus": "verified",
+        "thaiQcNotes": [
+          "ไวยากรณ์ไทยถูกต้อง ตัวสะกดและอักขระชัดเจน พร้อมพากย์เสียง"
+        ],
+        "thaiGrammarScore": 98,
+        "faceQcPassed": true
+      },
+      {
+        "id": "scene_2",
+        "sceneNumber": 2,
+        "title": "วินาทีที่โลกหยุดหมุน",
+        "duration": 5,
+        "narration": "ทันทีที่ฟันเฟืองชิ้นสุดท้ายเข้าล็อก หยดน้ำฝนด้านนอกหน้าต่างก็หยุดค้างกลางอากาศ",
+        "imagePrompt": "Dramatic close-up shot through a rain-streaked vintage window, raindrops frozen in mid-air like crystal spheres, young watchmaker in spectacles looking out in awe, glowing blue clockwork reflection on glass, cinematic lighting, 8k",
+        "videoPrompt": "Slow pan across frozen raindrops suspended in mid-air outside the window, subtle blue magical shimmer reflecting on the watchmaker face",
+        "cameraMotion": "pan_right",
+        "imageStatus": "approved",
+        "imageUrl": "/outputs/images/img_proj_demo_01_scene_2_1792422595123.jpg",
+        "audioStatus": "ready",
+        "audioUrl": "/outputs/audio/aud_proj_demo_01_scene_2_1792422620563.mp3",
+        "videoStatus": "ready",
+        "videoUrl": "/outputs/videos/vid_proj_demo_01_scene_2_1792422595122.mp4",
+        "characterIds": [
+          "char_main_1"
+        ],
+        "continueFromPrev": true,
+        "startKeyframeUrl": "/outputs/images/img_proj_demo_01_scene_2_1792422595123.jpg",
+        "ttsPhoneticText": "ทันทีที่ฟันเฟืองชิ้นสุดท้ายเข้าล็อก ... หยดน้ำฝนด้านนอกหน้าต่างก็หยุดค้างกลางอากาศ",
+        "thaiQcStatus": "verified",
+        "thaiQcNotes": [
+          "ไวยากรณ์ไทยถูกต้อง ตัวสะกดและอักขระชัดเจน พร้อมพากย์เสียง"
+        ],
+        "thaiGrammarScore": 98,
+        "faceQcPassed": true
+      },
+      {
+        "id": "scene_3",
+        "sceneNumber": 3,
+        "title": "ราคาของกาลเวลา",
+        "duration": 5,
+        "narration": "เขารู้ดีว่าทุกครั้งที่เข็มนาฬิกาหมุนทวน ภาพถ่ายในกรอบไม้บนโต๊ะจะค่อยๆ เลือนหายไปทีละคน",
+        "imagePrompt": "Moody cinematic wide shot inside a grand clocktower gear room, giant brass cogwheels, the young watchmaker holding a fading vintage photograph while holding the glowing pocket watch, emotional atmosphere, volumetric god rays, 8k",
+        "videoPrompt": "Slow zoom out revealing massive rotating clocktower gears in the background, dramatic volumetric light rays piercing through the dust",
+        "cameraMotion": "zoom_out",
+        "imageStatus": "approved",
+        "imageUrl": "/outputs/images/img_proj_demo_01_scene_3_1792422621151.jpg",
+        "audioStatus": "ready",
+        "audioUrl": "/outputs/audio/aud_proj_demo_01_scene_3_1792422622940.mp3",
+        "videoStatus": "ready",
+        "videoUrl": "/outputs/videos/vid_proj_demo_01_scene_3_1792422621151.mp4",
+        "characterIds": [
+          "char_main_1"
+        ],
+        "continueFromPrev": true,
+        "startKeyframeUrl": "/outputs/images/img_proj_demo_01_scene_3_1792422621151.jpg",
+        "ttsPhoneticText": "เขารู้ดีว่าทุกครั้งที่เข็มนาฬิกาหมุนทวน ... ภาพถ่ายในกรอบไม้บนโต๊ะจะค่อยๆ ... เลือนหายไปทีละคน",
+        "thaiQcStatus": "verified",
+        "thaiQcNotes": [
+          "ไวยากรณ์ไทยถูกต้อง ตัวสะกดและอักขระชัดเจน พร้อมพากย์เสียง"
+        ],
+        "thaiGrammarScore": 98,
+        "faceQcPassed": true
+      }
+    ],
+    "subtitleUrl": "/outputs/renders/shortfilm_proj_demo_01_1792422623444.srt",
+    "characters": [
+      {
+        "id": "char_main_1",
+        "name": "ตัวละครหลัก (Main Protagonist)",
+        "role": "Protagonist",
+        "age": "25 ปี",
+        "visualDna": "Young Thai male watchmaker, 22 years old, wearing vintage leather apron and round spectacles, messy dark hair, warm expressive eyes",
+        "faceImageUrl": "/outputs/images/img_proj_demo_01_scene_1_1792422585214.jpg",
+        "magnificRefId": "",
+        "faceLockActive": true
+      }
+    ]
+  }
+]

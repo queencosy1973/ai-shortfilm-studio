@@ -1,10 +1,9 @@
 {
   "name": "ai-shortfilm-studio",
-  "version": "2.5.0",
-  "private": true,
-  "description": "AI Short Film Production Studio v2.5 (Gemini, Flow, ChatGPT, Meta AI, Grok 9:16)",
+  "version": "1.0.0",
+  "description": "Semi-Automated AI Short Film Production Studio (Gemini, ChatGPT, Magnific/Freepik Flow, ElevenLabs, FFmpeg)",
+  "main": "server.js",
   "scripts": {
-    "build": "node build-static.js",
     "start": "node server.js"
   }
 }

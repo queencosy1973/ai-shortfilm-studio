@@ -3,8 +3,7 @@ node_modules/
 outputs/renders/*.txt
 data/config.json
 data/mcp_queue.json
-server.js
-api/
+build-static.js
 public/outputs/
 public/data/
 .env

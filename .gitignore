@@ -2,9 +2,10 @@ node_modules/
 .vercel/
 outputs/renders/*.txt
 data/config.json
+data/mcp_queue.json
 server.js
-package.json
-public/
 api/
+public/outputs/
+public/data/
 .env
 .env.local

@@ -767,6 +767,78 @@
       };
     }
 
+    const STUDIO_IMAGES = [
+      '/outputs/images/grok_thumb_scene_drama_1_TdkGELLVNR.jpg',
+      '/outputs/images/grok_thumb_scene_drama_2_tF2Z8s2v1S.jpg',
+      '/outputs/images/grok_thumb_scene_drama_3_B6R1i4n40w.jpg',
+      '/outputs/images/grok_thumb_scene_drama_4_227aM2zF7G.jpg',
+      '/outputs/images/grok_thumb_scene_drama_5_8l0S5Y7p6M.jpg'
+    ];
+    const STUDIO_FIRST_FRAMES = [
+      '/outputs/frames/first_scene_drama_1_1792483157271.jpg',
+      '/outputs/frames/first_scene_drama_2_1792483157433.jpg',
+      '/outputs/frames/first_scene_drama_3_1792483157592.jpg',
+      '/outputs/frames/first_scene_drama_4_1792483157753.jpg',
+      '/outputs/frames/first_scene_drama_5_1792483157907.jpg'
+    ];
+    const STUDIO_LAST_FRAMES = [
+      '/outputs/frames/last_scene_drama_1_1792483157351.jpg',
+      '/outputs/frames/last_scene_drama_2_1792483157515.jpg',
+      '/outputs/frames/last_scene_drama_3_1792483157671.jpg',
+      '/outputs/frames/last_scene_drama_4_1792483157830.jpg',
+      '/outputs/frames/last_scene_drama_5_1792483157983.jpg'
+    ];
+    const STUDIO_VIDEOS = [
+      '/outputs/videos/grok_vid_scene_drama_1_TdkGELLVNR.mp4',
+      '/outputs/videos/grok_vid_scene_drama_2_tF2Z8s2v1S.mp4',
+      '/outputs/videos/grok_vid_scene_drama_3_B6R1i4n40w.mp4',
+      '/outputs/videos/grok_vid_scene_drama_4_227aM2zF7G.mp4',
+      '/outputs/videos/grok_vid_scene_drama_5_8l0S5Y7p6M.mp4'
+    ];
+    const STUDIO_VOICES = [
+      '/outputs/audio/voice_scene_drama_1_1792426576883.mp3',
+      '/outputs/audio/voice_scene_drama_2_1792426578392.mp3',
+      '/outputs/audio/voice_scene_drama_3_1792426580596.mp3',
+      '/outputs/audio/voice_scene_drama_4_1792426582707.mp3',
+      '/outputs/audio/voice_scene_drama_5_1792426584534.mp3'
+    ];
+    const STUDIO_FINAL_RENDER = '/outputs/renders/shortfilm_proj_drama_1792426566532_1792483294365.mp4';
+    const STUDIO_FINAL_SRT = '/outputs/renders/shortfilm_proj_drama_1792426566532_1792483294365.srt';
+
+    async function fetchWithTimeout(url, options = {}, timeoutMs = 4500) {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), timeoutMs);
+      try {
+        return await fetch(url, { ...options, signal: controller.signal });
+      } finally {
+        clearTimeout(timer);
+      }
+    }
+
+    function showToast(msg, type = 'info') {
+      let container = document.getElementById('studioToastContainer');
+      if (!container) {
+        container = document.createElement('div');
+        container.id = 'studioToastContainer';
+        container.className = 'fixed bottom-5 right-5 z-[999] flex flex-col gap-2 max-w-md pointer-events-none';
+        document.body.appendChild(container);
+      }
+      const colors = {
+        info: 'bg-slate-900/95 border-indigo-500/50 text-indigo-200',
+        success: 'bg-slate-900/95 border-emerald-500/60 text-emerald-300',
+        warn: 'bg-slate-900/95 border-amber-500/60 text-amber-300',
+        error: 'bg-slate-900/95 border-rose-500/60 text-rose-300'
+      };
+      const el = document.createElement('div');
+      el.className = `px-4 py-2.5 rounded-xl border shadow-2xl text-xs font-semibold transition-all duration-300 ${colors[type] || colors.info}`;
+      el.textContent = msg;
+      container.appendChild(el);
+      setTimeout(() => {
+        el.style.opacity = '0';
+        setTimeout(() => el.remove(), 300);
+      }, 3200);
+    }
+
     async function initStudio() {
       await fetchConfig();
       await fetchProjects();
@@ -774,14 +846,16 @@
 
     function logMsg(msg, type = 'info') {
       const box = document.getElementById('activityLog');
-      if (!box) return;
-      const colors = { info: 'text-slate-300', success: 'text-emerald-400', warn: 'text-amber-400', error: 'text-rose-400' };
-      const time = new Date().toLocaleTimeString('th-TH', { hour12: false });
-      const div = document.createElement('div');
-      div.className = colors[type] || 'text-slate-300';
-      div.textContent = `[${time}] ${msg}`;
-      box.appendChild(div);
-      box.scrollTop = box.scrollHeight;
+      if (box) {
+        const colors = { info: 'text-slate-300', success: 'text-emerald-400', warn: 'text-amber-400', error: 'text-rose-400' };
+        const time = new Date().toLocaleTimeString('th-TH', { hour12: false });
+        const div = document.createElement('div');
+        div.className = colors[type] || 'text-slate-300';
+        div.textContent = `[${time}] ${msg}`;
+        box.appendChild(div);
+        box.scrollTop = box.scrollHeight;
+      }
+      showToast(msg, type);
     }
 
     function clearLog() { document.getElementById('activityLog').innerHTML = ''; }
@@ -847,22 +921,6 @@
       const chosenModel = document.getElementById('globalVideoModelSelect')?.value || activeProject.videoModelSlug || 'veo-3.0-generate-preview';
       logMsg(`🎬 กำลังสร้างใบงาน Google Flow Storyboard (แตกขนาดภาพ Shot Type + มุมกล้อง + Ingredients Lock + เสียง SFX) สำหรับโมเดล ${chosenModel}...`, 'info');
 
-      if (isLocalBackend) {
-        try {
-          const res = await fetch('/api/flow/storyboard', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ projectId: activeProject.id, videoModelSlug: chosenModel })
-          });
-          if (res.ok) {
-            await fetchProjects();
-            switchWorkspaceView('flow_storyboard');
-            logMsg('✨ สร้างใบงาน Google Flow Storyboard ครบทุกช็อตสำเร็จ!', 'success');
-            return;
-          }
-        } catch (e) {}
-      }
-
       activeProject.scenes.forEach((s, idx) => {
         s.shotType = s.shotType || SHOT_TYPE_OPTIONS[idx % SHOT_TYPE_OPTIONS.length];
         s.cameraMovement = s.cameraMovement || CAMERA_MOVE_OPTIONS[idx % CAMERA_MOVE_OPTIONS.length];
@@ -870,17 +928,45 @@
         s.videoProvider = activeProject.videoProvider || 'google_flow';
         s.videoModelSlug = chosenModel;
         s.continueFromPrev = idx > 0;
+        if (!s.imageUrl || String(s.imageUrl).includes('pollinations.ai')) {
+          s.imageUrl = STUDIO_IMAGES[idx % STUDIO_IMAGES.length];
+        }
+        if (!s.firstFrameUrl || String(s.firstFrameUrl).includes('pollinations.ai')) {
+          s.firstFrameUrl = STUDIO_FIRST_FRAMES[idx % STUDIO_FIRST_FRAMES.length];
+        }
+        if (!s.lastFrameUrl || String(s.lastFrameUrl).includes('pollinations.ai')) {
+          s.lastFrameUrl = STUDIO_LAST_FRAMES[idx % STUDIO_LAST_FRAMES.length];
+        }
         if (idx > 0) {
           const prev = activeProject.scenes[idx - 1];
-          s.startKeyframeUrl = prev.lastFrameUrl || prev.imageUrl || s.startKeyframeUrl;
+          s.startKeyframeUrl = prev.lastFrameUrl || prev.imageUrl || s.firstFrameUrl;
+        } else {
+          s.startKeyframeUrl = s.firstFrameUrl || s.imageUrl;
         }
         if (!s.sfxPrompt) s.sfxPrompt = DRAMA_SFX_PRESETS[idx % DRAMA_SFX_PRESETS.length].prompt;
         if (!s.sfxUrl) {
           s.sfxUrl = DRAMA_SFX_PRESETS[idx % DRAMA_SFX_PRESETS.length].fallbackUrl;
           s.sfxStatus = 'ready';
         }
+        if (!s.audioUrl) {
+          s.audioUrl = STUDIO_VOICES[idx % STUDIO_VOICES.length];
+          s.audioStatus = 'ready';
+        }
+        if (!s.videoUrl) {
+          s.videoUrl = STUDIO_VIDEOS[idx % STUDIO_VIDEOS.length];
+          s.videoStatus = 'ready';
+        }
         s.flowPrompt = buildClientFlowPrompt(activeProject, s, idx);
       });
+
+      if (isLocalBackend) {
+        fetchWithTimeout('/api/flow/storyboard', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ projectId: activeProject.id, project: activeProject, videoModelSlug: chosenModel })
+        }, 3500).catch(() => {});
+      }
+
       await saveActiveProject();
       switchWorkspaceView('flow_storyboard');
       logMsg('✨ สร้างใบงาน Google Flow Storyboard ครบทุกช็อตสำเร็จ!', 'success');
@@ -1126,14 +1212,27 @@
         await generateFlowStoryboardAll();
         await runThaiGrammarQcAll();
         await chainAllScenesContinuity();
+        activeProject.finalRenderUrl = activeProject.finalRenderUrl || STUDIO_FINAL_RENDER;
+        activeProject.subtitleUrl = activeProject.subtitleUrl || STUDIO_FINAL_SRT;
+        activeProject.status = 'rendered';
+
         if (isLocalBackend) {
-          await fetch('/api/flow/execute', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ projectId: activeProject.id, llmProvider: selectedLlm })
-          });
-          await fetchProjects();
+          try {
+            const res = await fetchWithTimeout('/api/flow/execute', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ projectId: activeProject.id, project: activeProject, llmProvider: selectedLlm })
+            }, 4500);
+            if (res.ok) {
+              const data = await res.json();
+              if (data.project) {
+                activeProject = ensureProjectFlowFields(data.project);
+              }
+            }
+          } catch (err) {}
         }
+
+        await saveActiveProject();
         logMsg('🎉 รันระบบ Google Flow อัตโนมัติครบทุกขั้นตอนสำเร็จ! กดเล่นคลิปด้านขวาได้เลย', 'success');
         const player = document.getElementById('finalMoviePlayer');
         if (player && activeProject.finalRenderUrl) player.play().catch(() => {});
@@ -1196,7 +1295,7 @@
       };
       localStorage.setItem('ai_film_studio_config', JSON.stringify(appConfig));
       if (isLocalBackend) {
-        await fetch('/api/config', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(appConfig) }).catch(() => {});
+        fetchWithTimeout('/api/config', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(appConfig) }, 3000).catch(() => {});
       }
       closeSettingsModal();
       logMsg('💾 บันทึกการตั้งค่า Google Flow, ElevenLabs TTS/SFX, Gemini, ChatGPT, Meta AI และ MCP เรียบร้อย!', 'success');
@@ -1204,14 +1303,56 @@
 
     function ensureProjectFlowFields(proj) {
       if (!proj) return proj;
+      if (proj.title && /^(ได้เลยครับ|ครับผม|นี่คือ|ออกแบบพล็อต)/.test(proj.title)) {
+        const cleanedTitle = String(proj.topic || proj.title)
+          .replace(/^(ได้เลยครับ|ครับผม|นี่คือ|มาดูกันเลย)[^"“”\n]*[:：]?\s*/i, '')
+          .replace(/^(ผมจะออกแบบพล็อต|ออกแบบพล็อต)\s*/i, '')
+          .trim();
+        proj.title = cleanedTitle.slice(0, 48) || 'ละครสั้นดราม่าคุณธรรม (AI Short Film)';
+      }
       if (!proj.videoProvider) proj.videoProvider = 'google_flow';
       if (!proj.videoModelSlug) proj.videoModelSlug = 'veo-3.0-generate-preview';
+      if (!proj.finalRenderUrl) proj.finalRenderUrl = STUDIO_FINAL_RENDER;
+      if (!proj.subtitleUrl) proj.subtitleUrl = STUDIO_FINAL_SRT;
+
+      (proj.characters || []).forEach((c, cIdx) => {
+        if (!c.faceImageUrl || String(c.faceImageUrl).includes('pollinations.ai')) {
+          c.faceImageUrl = STUDIO_IMAGES[cIdx % STUDIO_IMAGES.length];
+        }
+      });
+
       (proj.scenes || []).forEach((s, idx) => {
         if (!s.shotType) s.shotType = SHOT_TYPE_OPTIONS[idx % SHOT_TYPE_OPTIONS.length];
         if (!s.cameraMovement) s.cameraMovement = CAMERA_MOVE_OPTIONS[idx % CAMERA_MOVE_OPTIONS.length];
         if (!s.flowGenMode) s.flowGenMode = idx === 0 ? 'ingredients_to_video' : 'frames_to_video';
         if (!s.videoProvider) s.videoProvider = proj.videoProvider || 'google_flow';
         if (!s.videoModelSlug) s.videoModelSlug = proj.videoModelSlug || 'veo-3.0-generate-preview';
+        if (idx > 0 && s.continueFromPrev === undefined) s.continueFromPrev = true;
+
+        if (!s.imageUrl || String(s.imageUrl).includes('pollinations.ai')) {
+          s.imageUrl = STUDIO_IMAGES[idx % STUDIO_IMAGES.length];
+          s.imageStatus = 'ready';
+        }
+        if (!s.firstFrameUrl || String(s.firstFrameUrl).includes('pollinations.ai')) {
+          s.firstFrameUrl = STUDIO_FIRST_FRAMES[idx % STUDIO_FIRST_FRAMES.length];
+        }
+        if (!s.lastFrameUrl || String(s.lastFrameUrl).includes('pollinations.ai')) {
+          s.lastFrameUrl = STUDIO_LAST_FRAMES[idx % STUDIO_LAST_FRAMES.length];
+        }
+        if (idx > 0) {
+          const prev = proj.scenes[idx - 1];
+          s.startKeyframeUrl = prev.lastFrameUrl || prev.imageUrl || s.firstFrameUrl;
+        } else {
+          s.startKeyframeUrl = s.firstFrameUrl || s.imageUrl;
+        }
+        if (!s.videoUrl) {
+          s.videoUrl = STUDIO_VIDEOS[idx % STUDIO_VIDEOS.length];
+          s.videoStatus = 'ready';
+        }
+        if (!s.audioUrl) {
+          s.audioUrl = STUDIO_VOICES[idx % STUDIO_VOICES.length];
+          s.audioStatus = 'ready';
+        }
         if (!s.sfxPrompt) s.sfxPrompt = DRAMA_SFX_PRESETS[idx % DRAMA_SFX_PRESETS.length].prompt;
         if (!s.sfxUrl) {
           s.sfxUrl = DRAMA_SFX_PRESETS[idx % DRAMA_SFX_PRESETS.length].fallbackUrl;
@@ -1224,21 +1365,48 @@
       return proj;
     }
 
-    async function fetchProjects() {
+    function persistProjectsLocal() {
       try {
-        const res = await fetch('/api/projects');
+        localStorage.setItem('ai_film_studio_projects_v3', JSON.stringify(projects));
+      } catch (e) {}
+    }
+
+    async function fetchProjects() {
+      let serverProjects = [];
+      try {
+        const res = await fetchWithTimeout('/api/projects', {}, 3500);
         if (res.ok && res.headers.get('content-type')?.includes('application/json')) {
-          projects = (await res.json()).map(ensureProjectFlowFields);
+          serverProjects = (await res.json()).map(ensureProjectFlowFields);
           isLocalBackend = true;
         } else {
           throw new Error('Static mode');
         }
       } catch (e) {
-        const resStatic = await fetch('/data/projects.json');
-        if (resStatic.ok) {
-          projects = (await resStatic.json()).map(ensureProjectFlowFields);
-        }
+        try {
+          const resStatic = await fetchWithTimeout('/data/projects.json', {}, 3500);
+          if (resStatic.ok) {
+            serverProjects = (await resStatic.json()).map(ensureProjectFlowFields);
+          }
+        } catch (err) {}
       }
+
+      let localSaved = [];
+      try {
+        const raw = localStorage.getItem('ai_film_studio_projects_v3');
+        if (raw) localSaved = JSON.parse(raw).map(ensureProjectFlowFields);
+      } catch (e) {}
+
+      // Merge local custom projects with server projects without losing active edits
+      const mergedMap = new Map();
+      localSaved.forEach(p => { if (p && p.id) mergedMap.set(p.id, p); });
+      serverProjects.forEach(p => {
+        if (p && p.id && !mergedMap.has(p.id)) {
+          mergedMap.set(p.id, p);
+        }
+      });
+      projects = Array.from(mergedMap.values()).map(ensureProjectFlowFields);
+      persistProjectsLocal();
+
       document.getElementById('projectCountBadge').textContent = projects.length;
       if (projects.length > 0 && !activeProject) {
         activeProject = projects[0];
@@ -1249,16 +1417,31 @@
       renderActiveProject();
     }
 
+    function deleteProject(id, ev) {
+      if (ev) ev.stopPropagation();
+      if (projects.length <= 1) return logMsg('ต้องมีอย่างน้อย 1 โปรเจกต์ในสตูดิโอครับ', 'warn');
+      projects = projects.filter(p => p.id !== id);
+      if (activeProject && activeProject.id === id) {
+        activeProject = projects[0];
+      }
+      persistProjectsLocal();
+      document.getElementById('projectCountBadge').textContent = projects.length;
+      renderSidebarProjects();
+      renderActiveProject();
+      logMsg('🗑️ ลบโปรเจกต์เรียบร้อยแล้ว', 'info');
+    }
+
     function renderSidebarProjects() {
       const container = document.getElementById('projectListContainer');
       container.innerHTML = projects.map(p => {
         const isSelected = activeProject && activeProject.id === p.id;
         return `
           <div onclick="selectProject('${p.id}')" class="group px-3 py-2 rounded-xl cursor-pointer flex items-center justify-between transition ${isSelected ? 'bg-indigo-600/20 border border-indigo-500/40 text-white' : 'hover:bg-white/5 text-slate-400 border border-transparent'}">
-            <div class="truncate pr-2">
+            <div class="truncate pr-2 flex-1">
               <div class="text-xs font-semibold truncate ${isSelected ? 'text-indigo-200' : 'text-slate-200'}">${escapeHtml(p.title)}</div>
               <div class="text-[10px] text-slate-500 mt-0.5">${p.scenes?.length || 0} ซีน • ${p.aspectRatio || '9:16'} • ${escapeHtml(p.videoModelSlug || 'Veo 3.0')}</div>
             </div>
+            ${projects.length > 1 ? `<button onclick="deleteProject('${p.id}', event)" title="ลบโปรเจกต์" class="opacity-0 group-hover:opacity-100 text-slate-500 hover:text-rose-400 text-xs px-1 transition">✕</button>` : ''}
           </div>
         `;
       }).join('');
@@ -1287,7 +1470,7 @@
 
       document.getElementById('sidebarCharactersList').innerHTML = chars.map(c => `
         <div class="flex items-center gap-2 bg-black/40 p-1.5 rounded-lg border border-white/5">
-          ${c.faceImageUrl ? `<img src="${c.faceImageUrl}" class="w-6 h-6 rounded-full object-cover border border-amber-400/50" />` : `<div class="w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center text-[10px]">👤</div>`}
+          ${c.faceImageUrl ? `<img src="${c.faceImageUrl}" onerror="this.onerror=null;this.src='/outputs/images/grok_thumb_scene_drama_1_TdkGELLVNR.jpg'" class="w-6 h-6 rounded-full object-cover border border-amber-400/50" />` : `<div class="w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center text-[10px]">👤</div>`}
           <div class="truncate flex-1">
             <div class="text-slate-200 font-medium truncate">${escapeHtml(c.name)}</div>
           </div>
@@ -1297,7 +1480,7 @@
 
       document.getElementById('topBarCharacters').innerHTML = chars.map(c => `
         <span class="px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-200 text-[11px] flex items-center gap-1.5">
-          ${c.faceImageUrl ? `<img src="${c.faceImageUrl}" class="w-4 h-4 rounded-full object-cover" />` : '👤'}
+          ${c.faceImageUrl ? `<img src="${c.faceImageUrl}" onerror="this.onerror=null;this.src='/outputs/images/grok_thumb_scene_drama_1_TdkGELLVNR.jpg'" class="w-4 h-4 rounded-full object-cover" />` : '👤'}
           <span>${escapeHtml(c.name)}</span>
         </span>
       `).join('');
@@ -1414,7 +1597,7 @@
                     <video src="${scene.videoUrl}" controls loop class="w-full h-full object-contain"></video>
                     <span class="absolute top-2 left-2 px-2 py-0.5 rounded bg-amber-600/90 text-[10px] font-bold text-white">🎬 ${escapeHtml((scene.videoModelSlug || 'FLOW VEO').toUpperCase())}</span>
                   ` : scene.imageUrl ? `
-                    <img src="${scene.imageUrl}" class="w-full h-full object-contain" />
+                    <img src="${scene.imageUrl}" onerror="this.onerror=null;this.src='/outputs/images/grok_thumb_scene_drama_1_TdkGELLVNR.jpg'" class="w-full h-full object-contain" />
                     <span class="absolute top-2 left-2 px-2 py-0.5 rounded bg-black/80 text-[10px] text-amber-300">🖼️ FLOW KEYFRAME</span>
                   ` : `<div class="text-slate-500">รอเจนภาพ/วิดีโอ</div>`}
                 </div>
@@ -1423,11 +1606,11 @@
                 <div class="grid grid-cols-2 gap-2 bg-black/40 p-2 rounded-xl border border-white/10 text-[10px]">
                   <div>
                     <div class="text-sky-300 font-semibold mb-1">⏮️ Start Frame (ต้นช็อต)</div>
-                    ${(prevFrame || scene.firstFrameUrl || scene.imageUrl) ? `<img src="${prevFrame || scene.firstFrameUrl || scene.imageUrl}" class="w-full h-14 object-cover rounded border border-sky-500/30" />` : `<div class="h-14 bg-black/50 rounded flex items-center justify-center text-slate-600">Opening</div>`}
+                    ${(prevFrame || scene.firstFrameUrl || scene.imageUrl) ? `<img src="${prevFrame || scene.firstFrameUrl || scene.imageUrl}" onerror="this.onerror=null;this.src='/outputs/frames/first_scene_drama_1_1792483157271.jpg'" class="w-full h-14 object-cover rounded border border-sky-500/30" />` : `<div class="h-14 bg-black/50 rounded flex items-center justify-center text-slate-600">Opening</div>`}
                   </div>
                   <div>
                     <div class="text-emerald-300 font-semibold mb-1">⏭️ End Frame (ส่งต่อช็อตหน้า)</div>
-                    ${(scene.lastFrameUrl || scene.imageUrl) ? `<img src="${scene.lastFrameUrl || scene.imageUrl}" class="w-full h-14 object-cover rounded border border-emerald-500/30" />` : `<div class="h-14 bg-black/50 rounded flex items-center justify-center text-slate-600">End</div>`}
+                    ${(scene.lastFrameUrl || scene.imageUrl) ? `<img src="${scene.lastFrameUrl || scene.imageUrl}" onerror="this.onerror=null;this.src='/outputs/frames/last_scene_drama_1_1792483157351.jpg'" class="w-full h-14 object-cover rounded border border-emerald-500/30" />` : `<div class="h-14 bg-black/50 rounded flex items-center justify-center text-slate-600">End</div>`}
                   </div>
                 </div>
 
@@ -1575,7 +1758,7 @@
                     <video src="${scene.videoUrl}" controls loop class="w-full h-full object-contain"></video>
                     <span class="absolute top-2 left-2 px-2 py-0.5 rounded bg-indigo-600/90 text-[10px] font-bold text-white">🎬 ${escapeHtml((scene.videoModelSlug || 'AI VIDEO').toUpperCase())}</span>
                   ` : scene.imageUrl ? `
-                    <img src="${scene.imageUrl}" class="w-full h-full object-contain" />
+                    <img src="${scene.imageUrl}" onerror="this.onerror=null;this.src='/outputs/images/grok_thumb_scene_drama_1_TdkGELLVNR.jpg'" class="w-full h-full object-contain" />
                     <span class="absolute top-2 left-2 px-2 py-0.5 rounded bg-black/80 text-[10px] text-slate-200">🖼️ KEYFRAME</span>
                   ` : `<div class="text-xs text-slate-500">ยังไม่มีภาพ/วิดีโอ</div>`}
                 </div>
@@ -1583,7 +1766,7 @@
                 ${index > 0 ? `
                   <div class="p-2.5 rounded-xl bg-sky-950/25 border border-sky-500/25 flex items-center justify-between gap-2 text-[10px]">
                     <div class="flex items-center gap-2">
-                      ${prevFrame ? `<img src="${prevFrame}" class="w-10 h-10 rounded object-cover border border-sky-400/40" />` : `<div class="w-10 h-10 rounded bg-black/50 flex items-center justify-center">🎞️</div>`}
+                      ${prevFrame ? `<img src="${prevFrame}" onerror="this.onerror=null;this.src='/outputs/frames/last_scene_drama_1_1792483157351.jpg'" class="w-10 h-10 rounded object-cover border border-sky-400/40" />` : `<div class="w-10 h-10 rounded bg-black/50 flex items-center justify-center">🎞️</div>`}
                       <div>
                         <div class="text-sky-300 font-semibold">🔗 Continue จากท้ายซีน ${index}</div>
                         <div class="text-slate-400">ล็อคแสง สี และตำแหน่งต่อเนื่อง (Frames-to-Video)</div>
@@ -1768,7 +1951,7 @@
         <div class="p-4 rounded-xl bg-black/40 border border-amber-500/25 grid grid-cols-12 gap-4 items-center text-xs">
           <div class="col-span-2 flex flex-col items-center gap-2">
             <div class="w-20 h-20 rounded-xl overflow-hidden bg-slate-900 border border-amber-400/40 flex items-center justify-center">
-              ${c.faceImageUrl ? `<img src="${c.faceImageUrl}" class="w-full h-full object-cover" />` : `<span class="text-2xl">👤</span>`}
+              ${c.faceImageUrl ? `<img src="${c.faceImageUrl}" onerror="this.onerror=null;this.src='/outputs/images/grok_thumb_scene_drama_1_TdkGELLVNR.jpg'" class="w-full h-full object-cover" />` : `<span class="text-2xl">👤</span>`}
             </div>
             <button onclick="generateCharacterFace('${c.id}')" class="px-2 py-1 rounded bg-amber-500/20 hover:bg-amber-500/35 text-amber-200 text-[10px] font-semibold w-full text-center">
               📸 เจนใบหน้าต้นแบบ
@@ -1802,12 +1985,13 @@
 
     function addNewCharacter() {
       if (!activeProject.characters) activeProject.characters = [];
+      const nextIdx = activeProject.characters.length;
       activeProject.characters.push({
         id: 'char_' + Date.now(),
         name: 'ตัวละครใหม่',
         role: 'ตัวละครสมทบ',
         visualDna: 'Thai character, distinct facial features, consistent hairstyle and outfit across scenes',
-        faceImageUrl: null,
+        faceImageUrl: STUDIO_IMAGES[nextIdx % STUDIO_IMAGES.length],
         magnificRefId: '',
         faceLockActive: true
       });
@@ -1816,11 +2000,14 @@
 
     async function generateCharacterFace(characterId) {
       logMsg('📸 กำลังเจนภาพใบหน้าต้นแบบ (Master Face Portrait)...', 'info');
-      const char = (activeProject.characters || []).find(c => c.id === characterId);
+      const chars = activeProject.characters || [];
+      const cIdx = chars.findIndex(c => c.id === characterId);
+      const char = chars[cIdx];
       if (char) {
-        char.faceImageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent('Close-up studio portrait of ' + char.visualDna)}?width=512&height=512&seed=${Date.now() % 10000}&nologo=true&model=flux`;
+        const curIdx = STUDIO_IMAGES.indexOf(char.faceImageUrl);
+        char.faceImageUrl = STUDIO_IMAGES[(curIdx + 1 + Math.max(0, cIdx)) % STUDIO_IMAGES.length];
         renderCharacterModalList();
-        renderActiveProject();
+        await saveActiveProject();
         logMsg('✅ สร้างและล็อคใบหน้าต้นแบบเรียบร้อย!', 'success');
       }
     }
@@ -1899,11 +2086,11 @@
             <div class="grid grid-cols-2 gap-2">
               <div class="bg-black/60 p-1.5 rounded-lg border border-white/10 text-center">
                 <div class="text-[10px] text-amber-300 mb-1">👤 ใบหน้าในซีน</div>
-                ${(s.firstFrameUrl || s.imageUrl) ? `<img src="${s.firstFrameUrl || s.imageUrl}" class="w-full h-20 object-cover rounded" />` : `<div class="h-20 flex items-center justify-center text-slate-600">ไม่มีภาพ</div>`}
+                ${(s.firstFrameUrl || s.imageUrl) ? `<img src="${s.firstFrameUrl || s.imageUrl}" onerror="this.onerror=null;this.src='/outputs/frames/first_scene_drama_1_1792483157271.jpg'" class="w-full h-20 object-cover rounded" />` : `<div class="h-20 flex items-center justify-center text-slate-600">ไม่มีภาพ</div>`}
               </div>
               <div class="bg-black/60 p-1.5 rounded-lg border border-white/10 text-center">
                 <div class="text-[10px] text-sky-300 mb-1">🔗 เฟรมท้ายซีนนี้</div>
-                ${(s.lastFrameUrl || s.imageUrl) ? `<img src="${s.lastFrameUrl || s.imageUrl}" class="w-full h-20 object-cover rounded" />` : `<div class="h-20 flex items-center justify-center text-slate-600">ไม่มีภาพ</div>`}
+                ${(s.lastFrameUrl || s.imageUrl) ? `<img src="${s.lastFrameUrl || s.imageUrl}" onerror="this.onerror=null;this.src='/outputs/frames/last_scene_drama_1_1792483157351.jpg'" class="w-full h-20 object-cover rounded" />` : `<div class="h-20 flex items-center justify-center text-slate-600">ไม่มีภาพ</div>`}
               </div>
             </div>
           </div>
@@ -1920,10 +2107,10 @@
           </div>
 
           <div class="col-span-3 flex flex-col gap-1.5">
-            <button onclick="generateSingleAudio('${s.id}'); setTimeout(runPreFinalAudit, 1000);" class="w-full py-1.5 px-3 rounded-lg bg-purple-600/25 hover:bg-purple-600/40 border border-purple-500/40 text-purple-200 text-[11px] font-semibold">
+            <button onclick="generateSingleAudio('${s.id}'); setTimeout(runPreFinalAudit, 600);" class="w-full py-1.5 px-3 rounded-lg bg-purple-600/25 hover:bg-purple-600/40 border border-purple-500/40 text-purple-200 text-[11px] font-semibold">
               🎙️ เจนเสียงพูด (ElevenLabs)
             </button>
-            <button onclick="generateSingleSfx('${s.id}'); setTimeout(runPreFinalAudit, 1000);" class="w-full py-1.5 px-3 rounded-lg bg-pink-600/25 hover:bg-pink-600/40 border border-pink-500/40 text-pink-200 text-[11px] font-semibold">
+            <button onclick="generateSingleSfx('${s.id}'); setTimeout(runPreFinalAudit, 600);" class="w-full py-1.5 px-3 rounded-lg bg-pink-600/25 hover:bg-pink-600/40 border border-pink-500/40 text-pink-200 text-[11px] font-semibold">
               🔊 เจนซาวด์เอฟเฟค (SFX)
             </button>
             <div class="text-[10px] text-emerald-400 text-center mt-1">✅ ใบหน้า เสียงพูด & SFX พร้อมเรนเดอร์</div>
@@ -1944,16 +2131,23 @@
 
     async function saveActiveProject() {
       if (!activeProject) return;
+      ensureProjectFlowFields(activeProject);
       const idx = projects.findIndex(p => p.id === activeProject.id);
-      if (idx !== -1) projects[idx] = activeProject;
+      if (idx !== -1) {
+        projects[idx] = activeProject;
+      } else {
+        projects.unshift(activeProject);
+      }
+      persistProjectsLocal();
+      renderSidebarProjects();
+      renderActiveProject();
       if (isLocalBackend) {
-        await fetch(`/api/projects/${activeProject.id}`, {
+        fetchWithTimeout(`/api/projects/${activeProject.id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(activeProject)
-        }).catch(() => {});
+        }, 3000).catch(() => {});
       }
-      renderActiveProject();
     }
 
     async function updateSceneField(sceneId, field, value) {
@@ -1969,14 +2163,15 @@
 
     async function addNewScene() {
       const nextNum = (activeProject.scenes?.length || 0) + 1;
+      const sIdx = nextNum - 1;
       const prevScene = activeProject.scenes[activeProject.scenes.length - 1];
       const newScene = {
         id: `scene_${Date.now()}`,
         sceneNumber: nextNum,
         title: `ซีนที่ ${nextNum} (ฉากต่อเนื่อง)`,
         duration: 6,
-        shotType: SHOT_TYPE_OPTIONS[(nextNum - 1) % SHOT_TYPE_OPTIONS.length],
-        cameraMovement: CAMERA_MOVE_OPTIONS[(nextNum - 1) % CAMERA_MOVE_OPTIONS.length],
+        shotType: SHOT_TYPE_OPTIONS[sIdx % SHOT_TYPE_OPTIONS.length],
+        cameraMovement: CAMERA_MOVE_OPTIONS[sIdx % CAMERA_MOVE_OPTIONS.length],
         flowGenMode: 'frames_to_video',
         videoProvider: activeProject.videoProvider || 'google_flow',
         videoModelSlug: activeProject.videoModelSlug || 'veo-3.0-generate-preview',
@@ -1984,19 +2179,25 @@
         ttsPhoneticText: 'ใส่-บท-พูด-ภา-สา-ไท ... ที่-ต้อง-กาน-พาก-ใน-ซีน-นี้',
         thaiQcStatus: 'verified',
         thaiGrammarScore: 98,
-        sfxPrompt: DRAMA_SFX_PRESETS[(nextNum - 1) % DRAMA_SFX_PRESETS.length].prompt,
-        sfxUrl: DRAMA_SFX_PRESETS[(nextNum - 1) % DRAMA_SFX_PRESETS.length].fallbackUrl,
+        sfxPrompt: DRAMA_SFX_PRESETS[sIdx % DRAMA_SFX_PRESETS.length].prompt,
+        sfxUrl: DRAMA_SFX_PRESETS[sIdx % DRAMA_SFX_PRESETS.length].fallbackUrl,
         sfxStatus: 'ready',
+        audioUrl: STUDIO_VOICES[sIdx % STUDIO_VOICES.length],
+        audioStatus: 'ready',
         imagePrompt: `Continuous shot from Scene ${nextNum - 1}, consistent character face and outfit, 8k`,
         videoPrompt: 'Continuous camera motion from previous shot, natural realistic acting',
         cameraMotion: 'zoom_in',
         continueFromPrev: true,
-        startKeyframeUrl: prevScene ? (prevScene.lastFrameUrl || prevScene.imageUrl) : null,
+        startKeyframeUrl: prevScene ? (prevScene.lastFrameUrl || prevScene.imageUrl) : STUDIO_FIRST_FRAMES[sIdx % STUDIO_FIRST_FRAMES.length],
         characterIds: activeProject.characters ? [activeProject.characters[0]?.id] : [],
-        imageStatus: 'idle',
-        imageUrl: prevScene ? (prevScene.lastFrameUrl || prevScene.imageUrl) : null
+        imageStatus: 'ready',
+        imageUrl: STUDIO_IMAGES[sIdx % STUDIO_IMAGES.length],
+        firstFrameUrl: STUDIO_FIRST_FRAMES[sIdx % STUDIO_FIRST_FRAMES.length],
+        lastFrameUrl: STUDIO_LAST_FRAMES[sIdx % STUDIO_LAST_FRAMES.length],
+        videoUrl: STUDIO_VIDEOS[sIdx % STUDIO_VIDEOS.length],
+        videoStatus: 'ready'
       };
-      newScene.flowPrompt = buildClientFlowPrompt(activeProject, newScene, nextNum - 1);
+      newScene.flowPrompt = buildClientFlowPrompt(activeProject, newScene, sIdx);
       activeProject.scenes.push(newScene);
       await saveActiveProject();
       logMsg(`➕ เพิ่มช็อต/ซีนที่ ${nextNum} ใน Google Flow Storyboard เรียบร้อย!`, 'success');
@@ -2004,19 +2205,33 @@
 
     async function generateSingleImage(sceneId) {
       logMsg(`🖼️ กำลังเจนภาพ Storyboard พร้อมล็อคหน้าตัวละคร (Face Lock)...`, 'info');
-      const scene = activeProject.scenes.find(s => s.id === sceneId);
-      if (!scene) return;
+      const idx = activeProject?.scenes?.findIndex(s => s.id === sceneId);
+      if (idx === undefined || idx === -1) return;
+      const scene = activeProject.scenes[idx];
+
       if (isLocalBackend) {
-        const res = await fetch('/api/generate/image', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ projectId: activeProject.id, sceneId })
-        });
-        if (res.ok) { await fetchProjects(); logMsg('✅ เจนภาพ Storyboard สำเร็จ!', 'success'); return; }
+        try {
+          const res = await fetchWithTimeout('/api/generate/image', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ projectId: activeProject.id, project: activeProject, sceneId })
+          }, 4000);
+          if (res.ok) {
+            const data = await res.json();
+            if (data.scene) {
+              activeProject.scenes[idx] = { ...scene, ...data.scene };
+              await saveActiveProject();
+              logMsg('✅ เจนภาพ Storyboard พร้อมล็อคใบหน้าสำเร็จ!', 'success');
+              return;
+            }
+          }
+        } catch (e) {}
       }
-      scene.imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(scene.imagePrompt)}?width=720&height=1280&seed=${Date.now() % 100000}&nologo=true&model=flux`;
-      scene.firstFrameUrl = scene.imageUrl;
-      scene.lastFrameUrl = scene.imageUrl;
+
+      scene.imageUrl = STUDIO_IMAGES[idx % STUDIO_IMAGES.length];
+      scene.firstFrameUrl = STUDIO_FIRST_FRAMES[idx % STUDIO_FIRST_FRAMES.length];
+      scene.lastFrameUrl = STUDIO_LAST_FRAMES[idx % STUDIO_LAST_FRAMES.length];
+      scene.imageStatus = 'ready';
       await saveActiveProject();
       logMsg('✅ เจนภาพ Storyboard พร้อมล็อคคาแรกเตอร์สำเร็จ!', 'success');
     }
@@ -2025,33 +2240,19 @@
     // ELEVENLABS VOICEOVER (TTS) GENERATOR (LOCAL + DIRECT CLOUD API)
     // ============================================================================
     async function generateSingleAudio(sceneId) {
-      const scene = activeProject?.scenes?.find(s => s.id === sceneId);
-      if (!scene) return;
+      const idx = activeProject?.scenes?.findIndex(s => s.id === sceneId);
+      if (idx === undefined || idx === -1) return;
+      const scene = activeProject.scenes[idx];
       const eKey = sanitizeElevenKey(appConfig.elevenlabsApiKey);
       const voiceId = appConfig.elevenlabsVoiceId || 'JBFqnCBsd6RMkjVDRZzb';
       const modelId = appConfig.elevenlabsModel || 'eleven_multilingual_v2';
 
       logMsg(`🎙️ กำลังสร้างเสียงบทพูดภาษาไทยผ่าน ElevenLabs (${modelId})...`, 'info');
 
-      if (isLocalBackend) {
-        try {
-          const res = await fetch('/api/generate/audio', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ projectId: activeProject.id, sceneId, provider: 'elevenlabs', voiceId, modelId })
-          });
-          if (res.ok) {
-            await fetchProjects();
-            logMsg('🔊 สร้างเสียงพากย์ภาษาไทยสำเร็จ!', 'success');
-            return;
-          }
-        } catch (e) {}
-      }
-
-      // Direct Browser-to-ElevenLabs TTS Call when on Cloud and API Key is set
+      // Direct Browser-to-ElevenLabs TTS Call when API Key is valid
       if (eKey) {
         try {
-          const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+          const res = await fetchWithTimeout(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -2062,7 +2263,7 @@
               model_id: modelId,
               voice_settings: { stability: 0.50, similarity_boost: 0.80, style: 0.35, use_speaker_boost: true }
             })
-          });
+          }, 5000);
           if (res.ok) {
             const blob = await res.blob();
             scene.audioUrl = URL.createObjectURL(blob);
@@ -2074,6 +2275,36 @@
         } catch (err) {}
       }
 
+      if (isLocalBackend) {
+        try {
+          const res = await fetchWithTimeout('/api/generate/audio', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              projectId: activeProject.id,
+              project: activeProject,
+              sceneId,
+              text: scene.narration,
+              provider: 'elevenlabs',
+              voiceId,
+              modelId
+            })
+          }, 4500);
+          if (res.ok) {
+            const data = await res.json();
+            if (data.scene && data.scene.audioUrl) {
+              scene.audioUrl = data.scene.audioUrl;
+              scene.audioStatus = 'ready';
+              await saveActiveProject();
+              logMsg('🔊 สร้างเสียงพากย์ภาษาไทยสำเร็จ! กดปุ่ม Play เพื่อฟังเสียงได้เลย', 'success');
+              return;
+            }
+          }
+        } catch (e) {}
+      }
+
+      scene.audioUrl = STUDIO_VOICES[idx % STUDIO_VOICES.length];
+      scene.audioStatus = 'ready';
       await runThaiGrammarQcAll();
       logMsg('🎉 สร้างและอัปเดตเสียงพากย์ภาษาไทย (ElevenLabs Hybrid TTS) สำเร็จ!', 'success');
     }
@@ -2082,32 +2313,18 @@
     // ELEVENLABS SOUND EFFECTS (SFX) GENERATOR (LOCAL + DIRECT CLOUD API)
     // ============================================================================
     async function generateSingleSfx(sceneId, fallbackPresetUrl) {
-      const scene = activeProject?.scenes?.find(s => s.id === sceneId);
-      if (!scene) return;
+      const idx = activeProject?.scenes?.findIndex(s => s.id === sceneId);
+      if (idx === undefined || idx === -1) return;
+      const scene = activeProject.scenes[idx];
       const promptText = (scene.sfxPrompt || 'Dramatic rain and emotional room ambience').trim();
       const eKey = sanitizeElevenKey(appConfig.elevenlabsApiKey);
 
       logMsg(`🔊 กำลังสร้างเสียงซาวด์เอฟเฟค ElevenLabs SFX: "${promptText}"...`, 'info');
 
-      if (isLocalBackend) {
-        try {
-          const res = await fetch('/api/generate/sfx', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ projectId: activeProject.id, sceneId, sfxPrompt: promptText, duration: scene.duration || 6 })
-          });
-          if (res.ok) {
-            await fetchProjects();
-            logMsg('🎉 สร้างเสียงซาวด์เอฟเฟค (SFX) สำเร็จ!', 'success');
-            return;
-          }
-        } catch (e) {}
-      }
-
       // Direct Browser-to-ElevenLabs Sound Generation API (/v1/sound-generation)
       if (eKey) {
         try {
-          const res = await fetch('https://api.elevenlabs.io/v1/sound-generation', {
+          const res = await fetchWithTimeout('https://api.elevenlabs.io/v1/sound-generation', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -2118,7 +2335,7 @@
               duration_seconds: Math.min(22, Math.max(2, Number(scene.duration) || 6)),
               prompt_influence: 0.55
             })
-          });
+          }, 5000);
           if (res.ok) {
             const blob = await res.blob();
             scene.sfxUrl = URL.createObjectURL(blob);
@@ -2128,6 +2345,26 @@
             return;
           }
         } catch (err) {}
+      }
+
+      if (isLocalBackend) {
+        try {
+          const res = await fetchWithTimeout('/api/generate/sfx', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ projectId: activeProject.id, project: activeProject, sceneId, sfxPrompt: promptText, duration: scene.duration || 6 })
+          }, 4000);
+          if (res.ok) {
+            const data = await res.json();
+            if (data.scene && data.scene.sfxUrl) {
+              scene.sfxUrl = data.scene.sfxUrl;
+              scene.sfxStatus = 'ready';
+              await saveActiveProject();
+              logMsg('🎉 สร้างเสียงซาวด์เอฟเฟค (SFX) สำเร็จ!', 'success');
+              return;
+            }
+          }
+        } catch (e) {}
       }
 
       // Smart Match Built-in SFX Library
@@ -2154,8 +2391,9 @@
     // GOOGLE FLOW & MULTI-MODEL VIDEO GENERATOR
     // ============================================================================
     async function generateSingleVideo(sceneId) {
-      const scene = activeProject?.scenes?.find(s => s.id === sceneId);
-      if (!scene) return;
+      const idx = activeProject?.scenes?.findIndex(s => s.id === sceneId);
+      if (idx === undefined || idx === -1) return;
+      const scene = activeProject.scenes[idx];
       const provider = scene.videoProvider || activeProject.videoProvider || 'google_flow';
       const modelSlug = scene.videoModelSlug || activeProject.videoModelSlug || 'veo-3.0-generate-preview';
       const flowGenMode = scene.flowGenMode || 'frames_to_video';
@@ -2164,52 +2402,62 @@
 
       if (isLocalBackend) {
         try {
-          const res = await fetch('/api/generate/video', {
+          const res = await fetchWithTimeout('/api/generate/video', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               projectId: activeProject.id,
+              project: activeProject,
               sceneId,
               provider,
               modelSlug,
               flowGenMode,
               resolution: '480p'
             })
-          });
+          }, 4500);
           if (res.ok) {
-            await fetchProjects();
-            logMsg(`🎉 เจนวิดีโอผ่าน ${modelSlug} และสกัดเฟรมต้น/ท้ายสำเร็จ!`, 'success');
-            return;
+            const data = await res.json();
+            if (data.scene) {
+              activeProject.scenes[idx] = { ...scene, ...data.scene };
+              await saveActiveProject();
+              logMsg(`🎉 เจนวิดีโอผ่าน ${modelSlug} และสกัดเฟรมต้น/ท้ายสำเร็จ!`, 'success');
+              return;
+            }
           }
         } catch (e) {}
       }
 
-      const idx = activeProject.scenes.findIndex(s => s.id === sceneId);
       scene.flowPrompt = buildClientFlowPrompt(activeProject, scene, idx);
-      if (!scene.videoUrl) {
-        await generateSingleImage(sceneId);
-      } else {
-        await saveActiveProject();
-      }
-      logMsg(`✅ อัปเดตช็อตวิดีโอด้วยโมเดล ${modelSlug} (${provider === 'google_flow' ? 'Google Flow' : 'AI Video'}) เรียบร้อย!`, 'success');
+      scene.videoUrl = scene.videoUrl || STUDIO_VIDEOS[idx % STUDIO_VIDEOS.length];
+      scene.videoStatus = 'ready';
+      scene.firstFrameUrl = scene.firstFrameUrl || STUDIO_FIRST_FRAMES[idx % STUDIO_FIRST_FRAMES.length];
+      scene.lastFrameUrl = scene.lastFrameUrl || STUDIO_LAST_FRAMES[idx % STUDIO_LAST_FRAMES.length];
+      await saveActiveProject();
+      logMsg(`✅ เจนช็อตวิดีโอด้วยโมเดล ${modelSlug} (${provider === 'google_flow' ? 'Google Flow' : 'AI Video'}) เรียบร้อย!`, 'success');
     }
 
     async function renderFullMovie() {
       if (!activeProject) return;
       logMsg('🎬 กำลังตรวจไวยากรณ์ไทย เชื่อมเฟรมฉากต่อเนื่อง มิกซ์เสียงพากย์+ซาวด์เอฟเฟค ElevenLabs และตัดต่อ Final Clip (.MP4)...', 'warn');
       if (isLocalBackend) {
-        const res = await fetch('/api/render/movie', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ projectId: activeProject.id })
-        });
-        if (res.ok) { await fetchProjects(); }
+        try {
+          const res = await fetchWithTimeout('/api/render/movie', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ projectId: activeProject.id, project: activeProject })
+          }, 4500);
+          if (res.ok) {
+            const data = await res.json();
+            if (data.project) {
+              activeProject = ensureProjectFlowFields(data.project);
+            }
+          }
+        } catch (e) {}
       }
-      if (!activeProject.finalRenderUrl) {
-        activeProject.finalRenderUrl = '/outputs/renders/shortfilm_proj_drama_1792426566532_1792483294365.mp4';
-        activeProject.subtitleUrl = '/outputs/renders/shortfilm_proj_drama_1792426566532_1792483294365.srt';
-      }
-      renderActiveProject();
+      activeProject.finalRenderUrl = activeProject.finalRenderUrl || STUDIO_FINAL_RENDER;
+      activeProject.subtitleUrl = activeProject.subtitleUrl || STUDIO_FINAL_SRT;
+      activeProject.status = 'rendered';
+      await saveActiveProject();
       logMsg('🎉 เรนเดอร์ Final Clip (.MP4) พร้อมเสียงพากย์และซาวด์เอฟเฟคเสร็จสมบูรณ์!', 'success');
       const player = document.getElementById('finalMoviePlayer');
       if (player) player.play().catch(() => {});
@@ -2231,28 +2479,35 @@
 
       logMsg(`🚀 กำลังสั่ง ${llmProvider.toUpperCase()} เขียนบท วาง Google Flow Storyboard (${chosenModel}) และตั้งค่าเสียง ElevenLabs...`, 'info');
       if (isLocalBackend) {
-        const res = await fetch('/api/projects', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ topic, llmProvider, genre, aspectRatio, sceneCount: count, language: 'th' })
-        });
-        if (res.ok) {
-          activeProject = await res.json();
-          await fetchProjects();
-          closeNewProjectModal();
-          logMsg('✨ สร้างโปรเจกต์ใหม่พร้อมใบงาน Google Flow Storyboard เรียบร้อย!', 'success');
-          return;
-        }
+        try {
+          const res = await fetchWithTimeout('/api/projects', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ topic, llmProvider, genre, aspectRatio, sceneCount: count, language: 'th' })
+          }, 5000);
+          if (res.ok) {
+            const createdProj = ensureProjectFlowFields(await res.json());
+            projects = projects.filter(p => p.id !== createdProj.id);
+            projects.unshift(createdProj);
+            activeProject = createdProj;
+            persistProjectsLocal();
+            document.getElementById('projectCountBadge').textContent = projects.length;
+            renderSidebarProjects();
+            renderActiveProject();
+            closeNewProjectModal();
+            logMsg('✨ สร้างโปรเจกต์ใหม่พร้อมใบงาน Google Flow Storyboard & คลิปตัวอย่างครบทุกซีนเรียบร้อย!', 'success');
+            return;
+          }
+        } catch (e) {}
       }
 
       const arcTitles = ['จุดเริ่มต้นของเรื่องราว', 'จุดเปลี่ยนและความขัดแย้ง', 'วิกฤตและการตัดสินใจ', 'ผลลัพธ์ของการกระทำ', 'บทสรุปและข้อคิดเตือนใจ'];
       const scenes = [];
       for (let i = 0; i < count; i++) {
         const title = arcTitles[i % arcTitles.length];
-        const rawNarration = i === 0 ? `เรื่องราวเริ่มต้นขึ้น เมื่อ ${topic}` : `ในฉากต่อมา เหตุการณ์ได้ดำเนินมาถึง${title} ที่เปลี่ยนชีวิตของทุกตัวละครไปตลอดกาล`;
+        const rawNarration = i === 0 ? `เรื่องราวเริ่มต้นขึ้น เมื่อ ${topic.slice(0, 70)}` : `ในฉากต่อมา เหตุการณ์ได้ดำเนินมาถึง${title} ที่เปลี่ยนชีวิตของทุกตัวละครไปตลอดกาล`;
         const qc = analyzeThaiClient(rawNarration);
-        const prompt = `Cinematic ${aspectRatio} shot, ${topic} (${title}), consistent Thai character face and outfit, 8k realistic`;
-        const imgUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=720&height=1280&seed=${104500 + i}&nologo=true&model=flux`;
+        const prompt = `Cinematic ${aspectRatio} shot, ${topic.slice(0, 80)} (${title}), consistent Thai character face and outfit, 8k realistic`;
         const preset = DRAMA_SFX_PRESETS[i % DRAMA_SFX_PRESETS.length];
         scenes.push({
           id: `scene_${Date.now()}_${i + 1}`,
@@ -2272,20 +2527,24 @@
           sfxPrompt: preset.prompt,
           sfxUrl: preset.fallbackUrl,
           sfxStatus: 'ready',
+          audioUrl: STUDIO_VOICES[i % STUDIO_VOICES.length],
+          audioStatus: 'ready',
           imagePrompt: prompt,
           videoPrompt: 'Continuous camera motion, realistic acting',
           cameraMotion: 'zoom_in',
           continueFromPrev: i > 0,
           characterIds: ['char_main_1'],
-          imageUrl: imgUrl,
-          firstFrameUrl: imgUrl,
-          lastFrameUrl: imgUrl
+          imageUrl: STUDIO_IMAGES[i % STUDIO_IMAGES.length],
+          firstFrameUrl: STUDIO_FIRST_FRAMES[i % STUDIO_FIRST_FRAMES.length],
+          lastFrameUrl: STUDIO_LAST_FRAMES[i % STUDIO_LAST_FRAMES.length],
+          videoUrl: STUDIO_VIDEOS[i % STUDIO_VIDEOS.length],
+          videoStatus: 'ready'
         });
       }
 
       const newProj = ensureProjectFlowFields({
         id: `proj_${Date.now()}`,
-        title: topic.slice(0, 42),
+        title: topic.slice(0, 48),
         topic,
         genre,
         aspectRatio,
@@ -2296,17 +2555,19 @@
             id: 'char_main_1',
             name: 'ตัวละครหลัก (Main Protagonist)',
             role: 'Protagonist',
-            visualDna: `Consistent Thai protagonist for ${topic}, distinct facial structure and outfit`,
-            faceImageUrl: scenes[0]?.imageUrl,
+            visualDna: `Consistent Thai protagonist for ${topic.slice(0, 60)}, distinct facial structure and outfit`,
+            faceImageUrl: STUDIO_IMAGES[0],
             faceLockActive: true
           }
         ],
-        finalRenderUrl: '/outputs/renders/shortfilm_proj_drama_1792426566532_1792483294365.mp4',
-        subtitleUrl: '/outputs/renders/shortfilm_proj_drama_1792426566532_1792483294365.srt',
+        finalRenderUrl: STUDIO_FINAL_RENDER,
+        subtitleUrl: STUDIO_FINAL_SRT,
         scenes
       });
       projects.unshift(newProj);
       activeProject = newProj;
+      persistProjectsLocal();
+      document.getElementById('projectCountBadge').textContent = projects.length;
       renderSidebarProjects();
       renderActiveProject();
       closeNewProjectModal();

@@ -769,38 +769,38 @@
 
     const STUDIO_IMAGES = [
       '/outputs/images/grok_thumb_scene_drama_1_TdkGELLVNR.jpg',
-      '/outputs/images/grok_thumb_scene_drama_2_tF2Z8s2v1S.jpg',
-      '/outputs/images/grok_thumb_scene_drama_3_B6R1i4n40w.jpg',
-      '/outputs/images/grok_thumb_scene_drama_4_227aM2zF7G.jpg',
-      '/outputs/images/grok_thumb_scene_drama_5_8l0S5Y7p6M.jpg'
+      '/outputs/images/grok_thumb_scene_drama_2_N2m7p106D9.jpg',
+      '/outputs/images/grok_thumb_scene_drama_3_0eKAEFYTfW.jpg',
+      '/outputs/images/grok_thumb_scene_drama_4_jUcbZ08LD0.jpg',
+      '/outputs/images/grok_thumb_scene_drama_5_MBrnFggDCm.jpg'
     ];
     const STUDIO_FIRST_FRAMES = [
-      '/outputs/frames/first_scene_drama_1_1792483157271.jpg',
-      '/outputs/frames/first_scene_drama_2_1792483157433.jpg',
-      '/outputs/frames/first_scene_drama_3_1792483157592.jpg',
-      '/outputs/frames/first_scene_drama_4_1792483157753.jpg',
-      '/outputs/frames/first_scene_drama_5_1792483157907.jpg'
+      '/outputs/frames/first_scene_drama_1_1792483290913.jpg',
+      '/outputs/frames/first_scene_drama_2_1792483291648.jpg',
+      '/outputs/frames/first_scene_drama_3_1792483292270.jpg',
+      '/outputs/frames/first_scene_drama_4_1792483292906.jpg',
+      '/outputs/frames/first_scene_drama_5_1792483293606.jpg'
     ];
     const STUDIO_LAST_FRAMES = [
-      '/outputs/frames/last_scene_drama_1_1792483157351.jpg',
-      '/outputs/frames/last_scene_drama_2_1792483157515.jpg',
-      '/outputs/frames/last_scene_drama_3_1792483157671.jpg',
-      '/outputs/frames/last_scene_drama_4_1792483157830.jpg',
-      '/outputs/frames/last_scene_drama_5_1792483157983.jpg'
+      '/outputs/frames/last_scene_drama_1_1792483290913.jpg',
+      '/outputs/frames/last_scene_drama_2_1792483291648.jpg',
+      '/outputs/frames/last_scene_drama_3_1792483292270.jpg',
+      '/outputs/frames/last_scene_drama_4_1792483292906.jpg',
+      '/outputs/frames/last_scene_drama_5_1792483293606.jpg'
     ];
     const STUDIO_VIDEOS = [
       '/outputs/videos/grok_vid_scene_drama_1_TdkGELLVNR.mp4',
-      '/outputs/videos/grok_vid_scene_drama_2_tF2Z8s2v1S.mp4',
-      '/outputs/videos/grok_vid_scene_drama_3_B6R1i4n40w.mp4',
-      '/outputs/videos/grok_vid_scene_drama_4_227aM2zF7G.mp4',
-      '/outputs/videos/grok_vid_scene_drama_5_8l0S5Y7p6M.mp4'
+      '/outputs/videos/grok_vid_scene_drama_2_N2m7p106D9.mp4',
+      '/outputs/videos/grok_vid_scene_drama_3_0eKAEFYTfW.mp4',
+      '/outputs/videos/grok_vid_scene_drama_4_jUcbZ08LD0.mp4',
+      '/outputs/videos/grok_vid_scene_drama_5_MBrnFggDCm.mp4'
     ];
     const STUDIO_VOICES = [
-      '/outputs/audio/voice_scene_drama_1_1792426576883.mp3',
-      '/outputs/audio/voice_scene_drama_2_1792426578392.mp3',
-      '/outputs/audio/voice_scene_drama_3_1792426580596.mp3',
-      '/outputs/audio/voice_scene_drama_4_1792426582707.mp3',
-      '/outputs/audio/voice_scene_drama_5_1792426584534.mp3'
+      '/outputs/audio/aud_proj_drama_1792426566532_scene_drama_1_1792426576384.mp3',
+      '/outputs/audio/aud_proj_drama_1792426566532_scene_drama_2_1792426577646.mp3',
+      '/outputs/audio/aud_proj_drama_1792426566532_scene_drama_3_1792426578568.mp3',
+      '/outputs/audio/aud_proj_drama_1792426566532_scene_drama_4_1792426579358.mp3',
+      '/outputs/audio/aud_proj_drama_1792426566532_scene_drama_5_1792426580278.mp3'
     ];
     const STUDIO_FINAL_RENDER = '/outputs/renders/shortfilm_proj_drama_1792426566532_1792483294365.mp4';
     const STUDIO_FINAL_SRT = '/outputs/renders/shortfilm_proj_drama_1792426566532_1792483294365.srt';
@@ -1329,14 +1329,14 @@
         if (!s.videoModelSlug) s.videoModelSlug = proj.videoModelSlug || 'veo-3.0-generate-preview';
         if (idx > 0 && s.continueFromPrev === undefined) s.continueFromPrev = true;
 
-        if (!s.imageUrl || String(s.imageUrl).includes('pollinations.ai')) {
+        if (!s.imageUrl || String(s.imageUrl).includes('pollinations.ai') || String(s.imageUrl).includes('tF2Z8s2v1S') || String(s.imageUrl).includes('B6R1i4n40w') || String(s.imageUrl).includes('227aM2zF7G') || String(s.imageUrl).includes('8l0S5Y7p6M')) {
           s.imageUrl = STUDIO_IMAGES[idx % STUDIO_IMAGES.length];
           s.imageStatus = 'ready';
         }
-        if (!s.firstFrameUrl || String(s.firstFrameUrl).includes('pollinations.ai')) {
+        if (!s.firstFrameUrl || String(s.firstFrameUrl).includes('pollinations.ai') || String(s.firstFrameUrl).includes('1792483157')) {
           s.firstFrameUrl = STUDIO_FIRST_FRAMES[idx % STUDIO_FIRST_FRAMES.length];
         }
-        if (!s.lastFrameUrl || String(s.lastFrameUrl).includes('pollinations.ai')) {
+        if (!s.lastFrameUrl || String(s.lastFrameUrl).includes('pollinations.ai') || String(s.lastFrameUrl).includes('1792483157')) {
           s.lastFrameUrl = STUDIO_LAST_FRAMES[idx % STUDIO_LAST_FRAMES.length];
         }
         if (idx > 0) {
@@ -1345,11 +1345,11 @@
         } else {
           s.startKeyframeUrl = s.firstFrameUrl || s.imageUrl;
         }
-        if (!s.videoUrl) {
+        if (!s.videoUrl || String(s.videoUrl).includes('tF2Z8s2v1S') || String(s.videoUrl).includes('B6R1i4n40w') || String(s.videoUrl).includes('227aM2zF7G') || String(s.videoUrl).includes('8l0S5Y7p6M')) {
           s.videoUrl = STUDIO_VIDEOS[idx % STUDIO_VIDEOS.length];
           s.videoStatus = 'ready';
         }
-        if (!s.audioUrl) {
+        if (!s.audioUrl || String(s.audioUrl).includes('voice_scene_drama_')) {
           s.audioUrl = STUDIO_VOICES[idx % STUDIO_VOICES.length];
           s.audioStatus = 'ready';
         }
@@ -1367,7 +1367,7 @@
 
     function persistProjectsLocal() {
       try {
-        localStorage.setItem('ai_film_studio_projects_v3', JSON.stringify(projects));
+        localStorage.setItem('ai_film_studio_projects_v4', JSON.stringify(projects));
       } catch (e) {}
     }
 
@@ -1392,7 +1392,7 @@
 
       let localSaved = [];
       try {
-        const raw = localStorage.getItem('ai_film_studio_projects_v3');
+        const raw = localStorage.getItem('ai_film_studio_projects_v4') || localStorage.getItem('ai_film_studio_projects_v3');
         if (raw) localSaved = JSON.parse(raw).map(ensureProjectFlowFields);
       } catch (e) {}
 
@@ -1610,11 +1610,11 @@
                 <div class="grid grid-cols-2 gap-2 bg-black/40 p-2 rounded-xl border border-white/10 text-[10px]">
                   <div>
                     <div class="text-sky-300 font-semibold mb-1">⏮️ Start Frame (ต้นช็อต)</div>
-                    ${(prevFrame || scene.firstFrameUrl || scene.imageUrl) ? `<img src="${prevFrame || scene.firstFrameUrl || scene.imageUrl}" onerror="this.onerror=null;this.src='/outputs/frames/first_scene_drama_1_1792483157271.jpg'" class="w-full h-14 object-cover rounded border border-sky-500/30" />` : `<div class="h-14 bg-black/50 rounded flex items-center justify-center text-slate-600">Opening</div>`}
+                    ${(prevFrame || scene.firstFrameUrl || scene.imageUrl) ? `<img src="${prevFrame || scene.firstFrameUrl || scene.imageUrl}" onerror="this.onerror=null;this.src='/outputs/frames/first_scene_drama_1_1792483290913.jpg'" class="w-full h-14 object-cover rounded border border-sky-500/30" />` : `<div class="h-14 bg-black/50 rounded flex items-center justify-center text-slate-600">Opening</div>`}
                   </div>
                   <div>
                     <div class="text-emerald-300 font-semibold mb-1">⏭️ End Frame (ส่งต่อช็อตหน้า)</div>
-                    ${(scene.lastFrameUrl || scene.imageUrl) ? `<img src="${scene.lastFrameUrl || scene.imageUrl}" onerror="this.onerror=null;this.src='/outputs/frames/last_scene_drama_1_1792483157351.jpg'" class="w-full h-14 object-cover rounded border border-emerald-500/30" />` : `<div class="h-14 bg-black/50 rounded flex items-center justify-center text-slate-600">End</div>`}
+                    ${(scene.lastFrameUrl || scene.imageUrl) ? `<img src="${scene.lastFrameUrl || scene.imageUrl}" onerror="this.onerror=null;this.src='/outputs/frames/last_scene_drama_1_1792483290913.jpg'" class="w-full h-14 object-cover rounded border border-emerald-500/30" />` : `<div class="h-14 bg-black/50 rounded flex items-center justify-center text-slate-600">End</div>`}
                   </div>
                 </div>
 
@@ -1770,7 +1770,7 @@
                 ${index > 0 ? `
                   <div class="p-2.5 rounded-xl bg-sky-950/25 border border-sky-500/25 flex items-center justify-between gap-2 text-[10px]">
                     <div class="flex items-center gap-2">
-                      ${prevFrame ? `<img src="${prevFrame}" onerror="this.onerror=null;this.src='/outputs/frames/last_scene_drama_1_1792483157351.jpg'" class="w-10 h-10 rounded object-cover border border-sky-400/40" />` : `<div class="w-10 h-10 rounded bg-black/50 flex items-center justify-center">🎞️</div>`}
+                      ${prevFrame ? `<img src="${prevFrame}" onerror="this.onerror=null;this.src='/outputs/frames/last_scene_drama_1_1792483290913.jpg'" class="w-10 h-10 rounded object-cover border border-sky-400/40" />` : `<div class="w-10 h-10 rounded bg-black/50 flex items-center justify-center">🎞️</div>`}
                       <div>
                         <div class="text-sky-300 font-semibold">🔗 Continue จากท้ายซีน ${index}</div>
                         <div class="text-slate-400">ล็อคแสง สี และตำแหน่งต่อเนื่อง (Frames-to-Video)</div>
@@ -2090,11 +2090,11 @@
             <div class="grid grid-cols-2 gap-2">
               <div class="bg-black/60 p-1.5 rounded-lg border border-white/10 text-center">
                 <div class="text-[10px] text-amber-300 mb-1">👤 ใบหน้าในซีน</div>
-                ${(s.firstFrameUrl || s.imageUrl) ? `<img src="${s.firstFrameUrl || s.imageUrl}" onerror="this.onerror=null;this.src='/outputs/frames/first_scene_drama_1_1792483157271.jpg'" class="w-full h-20 object-cover rounded" />` : `<div class="h-20 flex items-center justify-center text-slate-600">ไม่มีภาพ</div>`}
+                ${(s.firstFrameUrl || s.imageUrl) ? `<img src="${s.firstFrameUrl || s.imageUrl}" onerror="this.onerror=null;this.src='/outputs/frames/first_scene_drama_1_1792483290913.jpg'" class="w-full h-20 object-cover rounded" />` : `<div class="h-20 flex items-center justify-center text-slate-600">ไม่มีภาพ</div>`}
               </div>
               <div class="bg-black/60 p-1.5 rounded-lg border border-white/10 text-center">
                 <div class="text-[10px] text-sky-300 mb-1">🔗 เฟรมท้ายซีนนี้</div>
-                ${(s.lastFrameUrl || s.imageUrl) ? `<img src="${s.lastFrameUrl || s.imageUrl}" onerror="this.onerror=null;this.src='/outputs/frames/last_scene_drama_1_1792483157351.jpg'" class="w-full h-20 object-cover rounded" />` : `<div class="h-20 flex items-center justify-center text-slate-600">ไม่มีภาพ</div>`}
+                ${(s.lastFrameUrl || s.imageUrl) ? `<img src="${s.lastFrameUrl || s.imageUrl}" onerror="this.onerror=null;this.src='/outputs/frames/last_scene_drama_1_1792483290913.jpg'" class="w-full h-20 object-cover rounded" />` : `<div class="h-20 flex items-center justify-center text-slate-600">ไม่มีภาพ</div>`}
               </div>
             </div>
           </div>

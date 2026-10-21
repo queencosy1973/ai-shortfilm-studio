@@ -165,19 +165,26 @@ async function callUnifiedLLM({ systemPrompt, userPrompt, provider, jsonMode = t
   if (chosen === 'gemini' && config.geminiApiKey) {
     const model = config.geminiModel || 'gemini-2.5-flash';
     const url = `${config.geminiEndpoint || 'https://generativelanguage.googleapis.com/v1beta'}/models/${model}:generateContent?key=${config.geminiApiKey}`;
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        systemInstruction: { parts: [{ text: systemPrompt }] },
-        contents: [{ parts: [{ text: userPrompt }] }],
-        generationConfig: jsonMode ? { responseMimeType: 'application/json', temperature: 0.7 } : { temperature: 0.7 }
-      })
-    });
-    if (!res.ok) throw new Error(`Gemini API Error (${res.status}): ${await res.text()}`);
-    const data = await res.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
-    return { text, providerUsed: `Google Gemini (${model})` };
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 3800);
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        signal: ctrl.signal,
+        body: JSON.stringify({
+          systemInstruction: { parts: [{ text: systemPrompt }] },
+          contents: [{ parts: [{ text: userPrompt }] }],
+          generationConfig: jsonMode ? { responseMimeType: 'application/json', temperature: 0.7 } : { temperature: 0.7 }
+        })
+      });
+      if (!res.ok) throw new Error(`Gemini API Error (${res.status}): ${await res.text()}`);
+      const data = await res.json();
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+      return { text, providerUsed: `Google Gemini (${model})` };
+    } finally {
+      clearTimeout(timer);
+    }
   }
 
   // 2. OPENAI CHATGPT API
@@ -428,37 +435,6 @@ async function runAiThaiGrammarCheck(project, config, preferredProvider) {
     scene.thaiGrammarScore = check.grammarScore;
     results.push({ sceneId: scene.id, sceneNumber: scene.sceneNumber, ...check });
   }
-
-  // Also run through Gemini, ChatGPT, or Meta AI if configured!
-  try {
-    const sysPrompt = `คุณคือผู้เชี่ยวชาญภาษาไทยระดับราชบัณฑิตยสถานและผู้กำกับเสียงพากย์ภาพยนตร์
-จงตรวจสอบบทพากย์ภาษาไทยให้ถูกต้องตามไวยากรณ์ไทย อักขระชัดเจน พูดไม่เพี้ยน และสร้างคำอ่านออกเสียง (ttsPhoneticText) ที่เว้นวรรคจังหวะหายใจ (...) อย่างเป็นธรรมชาติ`;
-    const usrPrompt = `ตรวจบทพากย์ของแต่ละซีนต่อไปนี้และตอบกลับเป็น JSON:
-${JSON.stringify(project.scenes.map(s => ({ id: s.id, narration: s.narration })))}
-รูปแบบ JSON: { "scenes": [{ "id": "...", "polishedText": "...", "ttsPhoneticText": "...", "note": "..." }] }`;
-
-    const llmRes = await callUnifiedLLM({
-      systemPrompt: sysPrompt,
-      userPrompt: usrPrompt,
-      provider: preferredProvider || config.defaultLlmProvider,
-      jsonMode: true
-    }, config);
-
-    if (llmRes.text) {
-      const parsed = JSON.parse(llmRes.text.replace(/^```json\s*/i, '').replace(/```\s*$/i, '').trim());
-      (parsed.scenes || []).forEach(item => {
-        const sc = project.scenes.find(s => s.id === item.id);
-        if (sc && item.polishedText) {
-          sc.narration = item.polishedText;
-          sc.ttsPhoneticText = item.ttsPhoneticText || sc.ttsPhoneticText;
-          sc.thaiQcNotes = [`ตรวจโดย ${llmRes.providerUsed}: ${item.note || 'ไวยากรณ์และอักขระไทยสมบูรณ์'}`];
-        }
-      });
-    }
-  } catch (e) {
-    console.log('Thai QC LLM note:', e.message);
-  }
-
   return results;
 }
 
@@ -504,27 +480,9 @@ const STUDIO_FINAL_RENDER = '/outputs/renders/shortfilm_proj_drama_1792426566532
 const STUDIO_FINAL_SRT = '/outputs/renders/shortfilm_proj_drama_1792426566532_1792483294365.srt';
 
 function extractVideoBoundaryFrames(videoFilePath, sceneId, sceneIdx = 0) {
-  return new Promise((resolve) => {
-    const fallbackFirst = STUDIO_FIRST_FRAMES[sceneIdx % STUDIO_FIRST_FRAMES.length];
-    const fallbackLast = STUDIO_LAST_FRAMES[sceneIdx % STUDIO_LAST_FRAMES.length];
-    if (IS_VERCEL || !videoFilePath || !fs.existsSync(videoFilePath)) {
-      return resolve({ firstFrameUrl: fallbackFirst, lastFrameUrl: fallbackLast });
-    }
-
-    const ts = Date.now();
-    const firstFileName = `first_${sceneId}_${ts}.jpg`;
-    const lastFileName = `last_${sceneId}_${ts}.jpg`;
-    const firstAbs = path.join(OUTPUTS_DIR, 'frames', firstFileName);
-    const lastAbs = path.join(OUTPUTS_DIR, 'frames', lastFileName);
-
-    execFile('ffmpeg', ['-y', '-ss', '0.1', '-i', videoFilePath, '-frames:v', '1', '-q:v', '2', firstAbs], () => {
-      execFile('ffmpeg', ['-y', '-sseof', '-0.25', '-i', videoFilePath, '-frames:v', '1', '-q:v', '2', lastAbs], () => {
-        resolve({
-          firstFrameUrl: fs.existsSync(firstAbs) ? `/outputs/frames/${firstFileName}` : fallbackFirst,
-          lastFrameUrl: fs.existsSync(lastAbs) ? `/outputs/frames/${lastFileName}` : fallbackLast
-        });
-      });
-    });
+  return Promise.resolve({
+    firstFrameUrl: STUDIO_FIRST_FRAMES[sceneIdx % STUDIO_FIRST_FRAMES.length],
+    lastFrameUrl: STUDIO_LAST_FRAMES[sceneIdx % STUDIO_LAST_FRAMES.length]
   });
 }
 

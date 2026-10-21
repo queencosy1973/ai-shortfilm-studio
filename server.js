@@ -121,31 +121,80 @@ function getDefaultConfig() {
 }
 
 let inMemoryConfig = null;
+
+function normalizeConfig(cfg) {
+  if (!cfg || typeof cfg !== 'object') return cfg;
+  if (!cfg.elevenlabsVoiceId || String(cfg.elevenlabsVoiceId).length > 30) {
+    cfg.elevenlabsVoiceId = 'JBFqnCBsd6RMkjVDRZzb';
+  }
+  return cfg;
+}
+
+function mergeConfigNonEmpty(base, incoming) {
+  const result = { ...(base || {}) };
+  if (!incoming || typeof incoming !== 'object') return normalizeConfig(result);
+  const allowClear = Boolean(incoming.__allowClear);
+  const apiKeyFields = [
+    'geminiApiKey',
+    'openaiApiKey',
+    'metaAiApiKey',
+    'elevenlabsApiKey',
+    'xaiGrokApiKey',
+    'freepikApiKey',
+    'flowApiKey',
+    'falApiKey',
+    'replicateApiKey',
+    'runwayApiKey'
+  ];
+  for (const [k, v] of Object.entries(incoming)) {
+    if (k === '__allowClear' || k === 'isVercel') continue;
+    if (apiKeyFields.includes(k)) {
+      const trimmed = typeof v === 'string' ? v.trim() : '';
+      if (trimmed || allowClear || !result[k]) {
+        result[k] = trimmed;
+      }
+    } else if (v !== undefined && v !== null && v !== '') {
+      result[k] = v;
+    }
+  }
+  return normalizeConfig(result);
+}
+
 function loadConfig() {
   if (inMemoryConfig) return inMemoryConfig;
+  const def = getDefaultConfig();
   try {
     if (fs.existsSync(CONFIG_FILE)) {
       const current = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8'));
-      inMemoryConfig = { ...getDefaultConfig(), ...current };
+      inMemoryConfig = mergeConfigNonEmpty(def, current);
       return inMemoryConfig;
     }
   } catch (e) {}
-  const def = getDefaultConfig();
-  inMemoryConfig = def;
+  inMemoryConfig = normalizeConfig(def);
   try {
-    fs.writeFileSync(CONFIG_FILE, JSON.stringify(def, null, 2), 'utf8');
+    fs.writeFileSync(CONFIG_FILE, JSON.stringify(inMemoryConfig, null, 2), 'utf8');
   } catch (e) {}
-  return def;
+  return inMemoryConfig;
 }
 
 function saveConfig(cfg) {
   const current = loadConfig();
-  const updated = { ...current, ...cfg };
+  const updated = mergeConfigNonEmpty(current, cfg);
   inMemoryConfig = updated;
   try {
     fs.writeFileSync(CONFIG_FILE, JSON.stringify(updated, null, 2), 'utf8');
   } catch (e) {}
   return updated;
+}
+
+function getEffectiveConfig(body) {
+  const base = loadConfig();
+  if (body && body.tempConfig && typeof body.tempConfig === 'object') {
+    const merged = mergeConfigNonEmpty(base, body.tempConfig);
+    inMemoryConfig = merged;
+    return merged;
+  }
+  return base;
 }
 
 // ============================================================================
@@ -1482,7 +1531,10 @@ function parseBody(req) {
 function sendJson(res, status, data) {
   res.writeHead(status, {
     'Content-Type': 'application/json; charset=utf-8',
-    'Access-Control-Allow-Origin': '*'
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Access-Control-Request-Private-Network',
+    'Access-Control-Allow-Private-Network': 'true'
   });
   res.end(JSON.stringify(data));
 }
@@ -1567,7 +1619,8 @@ const requestHandler = async (req, res) => {
     res.writeHead(204, {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type'
+      'Access-Control-Allow-Headers': 'Content-Type, Access-Control-Request-Private-Network',
+      'Access-Control-Allow-Private-Network': 'true'
     });
     return res.end();
   }
@@ -1583,8 +1636,9 @@ const requestHandler = async (req, res) => {
 
     // Test Connection for Gemini, Flow, ChatGPT, Meta AI
     if (pathname === '/api/test-connection' && req.method === 'POST') {
-      const { provider, tempConfig } = await parseBody(req);
-      const cfg = { ...loadConfig(), ...(tempConfig || {}) };
+      const body = await parseBody(req);
+      const { provider } = body;
+      const cfg = getEffectiveConfig(body);
       const result = await testProviderConnection(provider, cfg);
       return sendJson(res, 200, result);
     }
@@ -1597,7 +1651,7 @@ const requestHandler = async (req, res) => {
       const project = resolveTargetProject(projects, projectId, body.project);
       if (!project) return sendJson(res, 404, { error: 'Project not found' });
 
-      const cfg = loadConfig();
+      const cfg = getEffectiveConfig(body);
       if (flowMode) cfg.flowMode = flowMode;
 
       // Step 1: Thai Script & Phonetic QC via chosen LLM (Gemini / ChatGPT / Meta AI)
@@ -1635,7 +1689,7 @@ const requestHandler = async (req, res) => {
     }
     if (pathname === '/api/projects' && req.method === 'POST') {
       const body = await parseBody(req);
-      const cfg = loadConfig();
+      const cfg = getEffectiveConfig(body);
       const generated = await generateStoryboardWithAI(body, cfg);
       const newProject = upgradeProjectStructure({
         id: `proj_${Date.now()}`,
@@ -1740,7 +1794,7 @@ const requestHandler = async (req, res) => {
       const project = resolveTargetProject(projects, projectId, body.project);
       if (!project) return sendJson(res, 404, { error: 'Project not found' });
 
-      const cfg = loadConfig();
+      const cfg = getEffectiveConfig(body);
       const results = await runAiThaiGrammarCheck(project, cfg, llmProvider);
       saveProjects(projects);
       return sendJson(res, 200, { ok: true, results, project });
@@ -1801,7 +1855,7 @@ const requestHandler = async (req, res) => {
       if (!project) return sendJson(res, 404, { error: 'Project not found' });
       const scene = project.scenes.find(s => s.id === sceneId) || project.scenes[0];
 
-      const result = await generateSceneImage({ project, scene, provider }, loadConfig());
+      const result = await generateSceneImage({ project, scene, provider }, getEffectiveConfig(body));
       if (!result.queuedMcp) {
         scene.imageUrl = result.imageUrl;
         scene.imageStatus = 'ready';
@@ -1827,7 +1881,7 @@ const requestHandler = async (req, res) => {
       if (voiceId) scene.voiceId = voiceId;
       if (modelId) scene.elevenlabsModel = modelId;
 
-      const result = await generateSceneAudio({ project: project || { id: 'proj_temp', language: 'th' }, scene, provider, voiceId, modelId }, loadConfig());
+      const result = await generateSceneAudio({ project: project || { id: 'proj_temp', language: 'th' }, scene, provider, voiceId, modelId }, getEffectiveConfig(body));
       if (!result.queuedMcp) {
         scene.audioUrl = result.audioUrl;
         scene.duration = result.duration || scene.duration;
@@ -1849,7 +1903,7 @@ const requestHandler = async (req, res) => {
         duration: duration || 6
       };
 
-      const result = await generateSceneSfx({ project: project || { id: 'proj_temp' }, scene, sfxPrompt, duration }, loadConfig());
+      const result = await generateSceneSfx({ project: project || { id: 'proj_temp' }, scene, sfxPrompt, duration }, getEffectiveConfig(body));
       scene.sfxUrl = result.sfxUrl;
       scene.sfxPrompt = result.sfxPrompt;
       scene.sfxStatus = 'ready';
@@ -1942,7 +1996,7 @@ const requestHandler = async (req, res) => {
       if (!project) return sendJson(res, 404, { error: 'Project not found' });
       const scene = project.scenes.find(s => s.id === sceneId) || project.scenes[0];
 
-      const result = await generateSceneVideo({ project, scene, provider, modelSlug, resolution, flowGenMode }, loadConfig());
+      const result = await generateSceneVideo({ project, scene, provider, modelSlug, resolution, flowGenMode }, getEffectiveConfig(body));
       if (!result.queuedMcp) {
         scene.videoUrl = result.videoUrl;
         scene.duration = result.duration || scene.duration;
@@ -1959,7 +2013,7 @@ const requestHandler = async (req, res) => {
       const project = resolveTargetProject(projects, projectId, body.project);
       if (!project) return sendJson(res, 404, { error: 'Project not found' });
 
-      const renderRes = await assembleFinalShortFilm(project, loadConfig());
+      const renderRes = await assembleFinalShortFilm(project, getEffectiveConfig(body));
       project.finalRenderUrl = renderRes.finalRenderUrl;
       project.subtitleUrl = renderRes.subtitleUrl;
       project.updatedAt = new Date().toISOString();

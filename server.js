@@ -1505,7 +1505,7 @@ function serveStaticFile(res, filePath) {
 
 const requestHandler = async (req, res) => {
   const urlObj = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
-  const pathname = urlObj.pathname;
+  const pathname = urlObj.searchParams.get('__path') || urlObj.pathname;
 
   if (req.method === 'OPTIONS') {
     res.writeHead(204, {

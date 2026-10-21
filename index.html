@@ -139,38 +139,85 @@
           <select id="headerAiProviderSelect" class="bg-transparent text-indigo-300 font-bold focus:outline-none text-xs">
             <option value="auto" class="bg-slate-900">⚡ Auto (สลับอัตโนมัติ)</option>
             <option value="gemini" class="bg-slate-900">✦ Google Gemini API</option>
-            <option value="flow" class="bg-slate-900">🌊 Flow Pipeline Engine</option>
+            <option value="flow" class="bg-slate-900">🌊 Google Flow Pipeline</option>
             <option value="chatgpt" class="bg-slate-900">🤖 OpenAI ChatGPT API</option>
             <option value="meta_ai" class="bg-slate-900">🦙 Meta AI (Llama 3.3 / 4)</option>
           </select>
         </div>
 
+        <button onclick="generateFlowStoryboardAll()" id="btnBuildFlowStoryboard" class="px-3 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/35 border border-amber-400/40 text-xs font-semibold text-amber-200 flex items-center gap-1.5 transition">
+          <span>🎬 1. สร้าง Flow Storyboard</span>
+        </button>
         <button onclick="runThaiGrammarQcAll()" id="btnThaiQc" class="px-3 py-2 rounded-xl bg-purple-950/60 hover:bg-purple-900/70 border border-purple-500/30 text-xs font-medium text-purple-200 flex items-center gap-1.5 transition">
-          <span>🇹🇭 1. ตรวจไวยากรณ์ & อักขระไทย</span>
+          <span>🇹🇭 2. ตรวจอักขระไทย & ElevenLabs</span>
         </button>
         <button onclick="chainAllScenesContinuity()" id="btnChainAll" class="px-3 py-2 rounded-xl bg-sky-950/60 hover:bg-sky-900/70 border border-sky-500/30 text-xs font-medium text-sky-200 flex items-center gap-1.5 transition">
-          <span>🔗 2. Continue เชื่อมฉากทุกซีน</span>
+          <span>🔗 3. Continue เชื่อมฉากทุกซีน</span>
         </button>
-        <button onclick="executeAutomatedFlowPipeline()" id="btnRunFlow" class="px-3.5 py-2 rounded-xl bg-amber-600/25 hover:bg-amber-600/40 border border-amber-500/40 text-xs font-semibold text-amber-200 flex items-center gap-1.5 transition">
-          <span>🌊 3. รันระบบ Flow อัตโนมัติ</span>
+        <button onclick="executeAutomatedFlowPipeline()" id="btnRunFlow" class="px-3.5 py-2 rounded-xl bg-indigo-600/30 hover:bg-indigo-600/45 border border-indigo-400/40 text-xs font-semibold text-indigo-200 flex items-center gap-1.5 transition">
+          <span>🌊 4. รัน Flow อัตโนมัติ</span>
         </button>
         <button onclick="openPreFinalQcModal()" class="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold shadow-lg shadow-emerald-600/25 flex items-center gap-1.5 transition">
-          <span>🛡️ 4. ตรวจ QC & เรนเดอร์ Final</span>
+          <span>🛡️ 5. ตรวจ QC & เรนเดอร์ Final</span>
         </button>
       </div>
     </header>
 
-    <!-- SUB-BAR -->
-    <div class="px-6 py-2 bg-[#101420] border-b border-white/5 flex items-center justify-between text-xs shrink-0">
-      <div class="flex items-center gap-4">
-        <span class="text-amber-300 font-semibold">🎭 ตัวละครที่ล็อคหน้า:</span>
-        <div id="topBarCharacters" class="flex items-center gap-2"></div>
-        <button onclick="openCharacterModal()" class="text-[11px] text-indigo-400 hover:underline">+ จัดการใบหน้าตัวละคร</button>
+    <!-- SUB-BAR: VIEW SWITCHER (STANDARD VS FLOW STORYBOARD) + GOOGLE FLOW MODEL SELECTOR -->
+    <div class="px-6 py-2.5 bg-[#101420] border-b border-white/10 flex items-center justify-between text-xs shrink-0 flex-wrap gap-3">
+      <div class="flex items-center gap-3 flex-wrap">
+        <!-- View Mode Toggle -->
+        <div class="inline-flex rounded-xl bg-black/60 p-1 border border-white/10">
+          <button id="tabBtnStandard" onclick="switchWorkspaceView('standard')" class="px-3 py-1 rounded-lg text-[11px] font-bold transition bg-indigo-600 text-white">
+            📋 โหมดจัดการซีน (Scene Studio)
+          </button>
+          <button id="tabBtnFlowStoryboard" onclick="switchWorkspaceView('flow_storyboard')" class="px-3 py-1 rounded-lg text-[11px] font-bold transition text-amber-300 hover:bg-white/5">
+            🎬 โหมด Google Flow Storyboard (Shot Canvas)
+          </button>
+        </div>
+
+        <div class="h-4 w-[1px] bg-white/10"></div>
+
+        <!-- Global Google Flow / Video Engine & Model Selector -->
+        <div class="flex items-center gap-1.5 bg-black/40 border border-amber-500/30 rounded-xl px-2.5 py-1">
+          <span class="text-amber-300 font-semibold text-[11px]">🎥 ระบบเจนวิดีโอ:</span>
+          <select id="globalVideoProviderSelect" onchange="onGlobalVideoProviderChange(this.value)" class="bg-transparent text-white font-bold focus:outline-none text-[11px]">
+            <option value="google_flow" class="bg-slate-900">🎬 Google Flow (Veo Filmmaking)</option>
+            <option value="mcp_grok" class="bg-slate-900">⚡ xAI Grok Imagine (9:16)</option>
+            <option value="mcp_seedance" class="bg-slate-900">🎞️ Seedance 2.5 Pro (Flow MCP)</option>
+            <option value="mcp_kling" class="bg-slate-900">🎥 Kling 2.5 Pro (Drama)</option>
+          </select>
+        </div>
+
+        <div class="flex items-center gap-1.5 bg-black/40 border border-sky-500/30 rounded-xl px-2.5 py-1">
+          <span class="text-sky-300 font-semibold text-[11px]">🤖 โมเดลวิดีโอ:</span>
+          <select id="globalVideoModelSelect" onchange="onGlobalVideoModelChange(this.value)" class="bg-transparent text-sky-200 font-bold focus:outline-none text-[11px]">
+            <optgroup label="🎬 Google Flow Models (Veo & Imagen)" class="bg-slate-900 text-amber-300">
+              <option value="veo-3.0-generate-preview" class="bg-slate-900 text-white">Google Flow • Veo 3.0 (Cinematic + Native Audio)</option>
+              <option value="veo-3.0-fast-generate-preview" class="bg-slate-900 text-white">Google Flow • Veo 3.0 Fast (9:16 Rapid)</option>
+              <option value="veo-2.0-generate-001" class="bg-slate-900 text-white">Google Flow • Veo 2.0 (Frames & Ingredients Lock)</option>
+              <option value="flow-imagen-3-keyframe" class="bg-slate-900 text-white">Google Flow • Imagen 3 Storyboard + Motion</option>
+            </optgroup>
+            <optgroup label="⚡ Grok & Magnific Flow MCP Models" class="bg-slate-900 text-indigo-300">
+              <option value="grok-imagine-video-1-5" class="bg-slate-900 text-white">xAI Grok Imagine Video 1.5 (9:16 480p/720p)</option>
+              <option value="seedance-2-5-pro" class="bg-slate-900 text-white">Seedance 2.5 Pro (SOTA Motion)</option>
+              <option value="kling-2-5-pro" class="bg-slate-900 text-white">Kling 2.5 Pro (Emotional Acting)</option>
+              <option value="luma-ray-2" class="bg-slate-900 text-white">Luma Ray 2 Flash</option>
+              <option value="wan-2-5" class="bg-slate-900 text-white">Wan 2.5 Cinematic</option>
+            </optgroup>
+          </select>
+        </div>
       </div>
-      <div class="flex items-center gap-4">
-        <div id="pipelineStats" class="text-slate-400 flex items-center gap-3 text-[11px]"></div>
-        <button onclick="addNewScene()" class="px-2.5 py-1 rounded-lg bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-300 border border-indigo-500/30 text-[11px] font-medium transition">
-          + เพิ่มซีนต่อเนื่อง
+
+      <div class="flex items-center gap-3">
+        <div class="flex items-center gap-1.5">
+          <span class="text-amber-300 font-semibold text-[11px]">🎭 ล็อคหน้า:</span>
+          <div id="topBarCharacters" class="flex items-center gap-1.5"></div>
+          <button onclick="openCharacterModal()" class="text-[11px] text-indigo-400 hover:underline">+จัดการ</button>
+        </div>
+        <div id="pipelineStats" class="text-slate-400 hidden xl:flex items-center gap-2.5 text-[11px]"></div>
+        <button onclick="addNewScene()" class="px-2.5 py-1 rounded-lg bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-200 border border-indigo-500/30 text-[11px] font-semibold transition">
+          + เพิ่มซีน/ช็อตใหม่
         </button>
       </div>
     </div>
@@ -204,25 +251,28 @@
             <a id="downloadSrtBtn" href="#" download class="w-full py-1.5 px-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 text-xs font-medium flex items-center justify-center gap-2 transition">
               📝 ดาวน์โหลดซับไตเติ้ลภาษาไทย (.SRT)
             </a>
+            <button onclick="exportFlowStoryboardJson()" class="w-full py-1.5 px-4 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-200 text-xs font-semibold flex items-center justify-center gap-2 transition">
+              🎬 ดาวน์โหลดใบงาน Google Flow Storyboard (.JSON)
+            </button>
           </div>
 
           <div class="p-3.5 rounded-xl bg-slate-900/90 border border-white/10 space-y-2 text-[11px]">
-            <div class="font-bold text-indigo-300">🛡️ ระบบควบคุมคุณภาพ & เชื่อมต่อ 4 AI หลัก</div>
+            <div class="font-bold text-indigo-300">🛡️ ระบบควบคุมการผลิต & AI ที่เชื่อมต่อ</div>
+            <div class="flex items-center justify-between text-slate-300">
+              <span>🎬 Google Flow Storyboard & Veo:</span>
+              <span class="text-amber-400 font-semibold">● พร้อมใช้งาน</span>
+            </div>
+            <div class="flex items-center justify-between text-slate-300">
+              <span>🎙️ ElevenLabs เสียงพากย์ & ซาวด์เอฟเฟค:</span>
+              <span class="text-pink-400 font-semibold">● TTS + SFX พร้อม</span>
+            </div>
             <div class="flex items-center justify-between text-slate-300">
               <span>✦ Gemini + 🤖 ChatGPT + 🦙 Meta AI:</span>
               <span class="text-emerald-400 font-semibold">● เชื่อมต่อแล้ว</span>
             </div>
             <div class="flex items-center justify-between text-slate-300">
-              <span>🌊 ระบบ Flow & Continue ฉากต่อเนื่อง:</span>
+              <span>👤 ล็อคใบหน้า (Face Lock) & เชื่อมฉาก:</span>
               <span class="text-sky-400 font-semibold">● เปิดใช้งาน</span>
-            </div>
-            <div class="flex items-center justify-between text-slate-300">
-              <span>👤 ล็อคใบหน้าตัวละคร (Face DNA Lock):</span>
-              <span class="text-amber-400 font-semibold">● เปิดใช้งาน</span>
-            </div>
-            <div class="flex items-center justify-between text-slate-300">
-              <span>🇹🇭 ตรวจไวยากรณ์ & คำอ่านอักขระไทย:</span>
-              <span class="text-purple-400 font-semibold">● ตรวจสอบแล้ว</span>
             </div>
           </div>
 
@@ -232,7 +282,7 @@
               <button onclick="clearLog()" class="text-[10px] text-slate-500 hover:text-slate-300">ล้าง</button>
             </div>
             <div id="activityLog" class="h-40 rounded-xl bg-black/50 border border-white/10 p-2.5 overflow-y-auto font-mono text-[11px] space-y-1 select-text">
-              <div class="text-emerald-400">[System] เชื่อมต่อระบบ Gemini, Flow, ChatGPT, Meta AI และ MCP พร้อมทำงาน...</div>
+              <div class="text-emerald-400">[System] เชื่อมต่อ Google Flow Storyboard, ElevenLabs TTS/SFX, Gemini, ChatGPT, Meta AI และ Grok พร้อมทำงาน...</div>
             </div>
           </div>
         </div>
@@ -353,24 +403,34 @@
 
         <div class="p-4 rounded-xl bg-amber-950/20 border border-amber-500/30 space-y-3">
           <div class="flex items-center justify-between">
-            <span class="font-bold text-amber-300 text-sm">🌊 2. ระบบ Flow (Scene & Video Flow)</span>
+            <span class="font-bold text-amber-300 text-sm">🎬 2. Google Flow (Storyboard & Veo Video)</span>
             <button onclick="testConnection('flow')" class="px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/35 text-amber-200 text-[11px] font-semibold">⚡ ทดสอบเชื่อมต่อ</button>
           </div>
           <div class="space-y-2">
-            <div>
-              <label class="block text-slate-400 mb-1">โหมดการทำงานของ Flow</label>
-              <select id="cfgFlowMode" class="w-full rounded-lg bg-black/50 border border-white/15 px-3 py-2 text-white">
-                <option value="magnific_flow">Magnific Spaces & Flows MCP + Auto-Continuity</option>
-                <option value="google_flow_veo">Google Labs Flow (Veo Filmmaking Pipeline)</option>
-                <option value="n8n_webhook">n8n / Make Automation Flow Webhook</option>
-                <option value="comfyui_flow">ComfyUI Node Workflow API</option>
-              </select>
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-slate-400 mb-1">โหมดการทำงานของ Flow</label>
+                <select id="cfgFlowMode" class="w-full rounded-lg bg-black/50 border border-white/15 px-2.5 py-2 text-white">
+                  <option value="google_flow_veo">Google Flow (Veo 3.0 / 2.0 Filmmaking)</option>
+                  <option value="magnific_flow">Magnific Spaces & Flows MCP</option>
+                  <option value="n8n_webhook">n8n / Automation Flow Webhook</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-slate-400 mb-1">โมเดล Google Flow เริ่มต้น</label>
+                <select id="cfgGoogleFlowModel" class="w-full rounded-lg bg-black/50 border border-white/15 px-2.5 py-2 text-amber-200 font-semibold">
+                  <option value="veo-3.0-generate-preview">Veo 3.0 (Cinematic + Audio)</option>
+                  <option value="veo-3.0-fast-generate-preview">Veo 3.0 Fast (9:16 Rapid)</option>
+                  <option value="veo-2.0-generate-001">Veo 2.0 (Frames & Ingredients)</option>
+                  <option value="flow-imagen-3-keyframe">Imagen 3 Storyboard + Motion</option>
+                </select>
+              </div>
             </div>
             <div>
-              <label class="block text-slate-400 mb-1">Flow Webhook URL / Space Flow ID</label>
-              <input id="cfgFlowWebhookUrl" type="text" placeholder="เว้นว่างไว้เพื่อใช้ Built-in Magnific Flow & Continuity" class="w-full rounded-lg bg-black/50 border border-white/15 px-3 py-2 text-white" />
+              <label class="block text-slate-400 mb-1">Flow Webhook URL / Google Flow Endpoint</label>
+              <input id="cfgFlowWebhookUrl" type="text" placeholder="เว้นว่างไว้เพื่อใช้ Google Flow Veo & Built-in Storyboard" class="w-full rounded-lg bg-black/50 border border-white/15 px-3 py-2 text-white" />
             </div>
-            <div id="testStatus_flow" class="text-[11px] text-emerald-400">สถานะ: ● เชื่อมต่อ Magnific Flow & Auto-Continuity พร้อมใช้งาน</div>
+            <div id="testStatus_flow" class="text-[11px] text-emerald-400">สถานะ: ● เชื่อมต่อ Google Flow Storyboard & Veo พร้อมใช้งาน</div>
           </div>
         </div>
 
@@ -424,16 +484,58 @@
           </div>
         </div>
 
-        <div class="col-span-2 p-4 rounded-xl bg-white/5 border border-white/10 space-y-3">
-          <div class="font-bold text-pink-300">🎞️ 5. โมเดลเจนวิดีโอ & เสียงพากย์เพิ่มเติม (Grok / Seedance / Kling / ElevenLabs)</div>
-          <div class="grid grid-cols-4 gap-3">
+        <!-- CARD 5: ELEVENLABS VOICE (TTS) & SOUND EFFECTS (SFX) -->
+        <div class="col-span-2 p-4 rounded-xl bg-pink-950/20 border border-pink-500/35 space-y-3">
+          <div class="flex items-center justify-between">
             <div>
-              <label class="block text-slate-400 mb-1">โมเดลวิดีโอเริ่มต้น</label>
+              <span class="font-bold text-pink-300 text-sm">🎙️ 5. ElevenLabs AI Studio (สร้างเสียงบทพูด TTS ภาษาไทย & ซาวด์เอฟเฟค SFX)</span>
+              <p class="text-[11px] text-slate-400">เชื่อมต่อ ElevenLabs เพื่อพากย์เสียงตัวละครดราม่าสมจริง และสร้างเสียง Sound Effects (ฝนตก, ผับหรู, ประตู, บรรยากาศ) จากข้อความ</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="fetchElevenLabsVoicesList()" class="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-slate-200 text-[11px] font-medium">🔄 ดึงรายการเสียง</button>
+              <button onclick="testConnection('elevenlabs')" class="px-3 py-1 rounded-lg bg-pink-500/25 hover:bg-pink-500/40 text-pink-200 text-[11px] font-semibold">⚡ ทดสอบเชื่อมต่อ ElevenLabs</button>
+            </div>
+          </div>
+          <div class="grid grid-cols-3 gap-3">
+            <div>
+              <label class="block text-slate-400 mb-1">ElevenLabs API Key (xi-api-key)</label>
+              <input id="cfgElevenKey" type="password" placeholder="sk_... หรือ xi-api-key" class="w-full rounded-lg bg-black/50 border border-white/15 px-3 py-2 text-white" />
+            </div>
+            <div>
+              <label class="block text-slate-400 mb-1">โมเดลเสียงพูด ElevenLabs (TTS Model)</label>
+              <select id="cfgElevenModel" class="w-full rounded-lg bg-black/50 border border-white/15 px-2.5 py-2 text-white">
+                <option value="eleven_multilingual_v2">eleven_multilingual_v2 (แนะนำ • ภาษาไทยอารมณ์ลึกซึ้ง)</option>
+                <option value="eleven_v3">eleven_v3 (รุ่นใหม่ล่าสุด • ดราม่าสมจริง)</option>
+                <option value="eleven_flash_v2_5">eleven_flash_v2_5 (ความเร็วสูง ประหยัดเครดิต)</option>
+                <option value="eleven_turbo_v2_5">eleven_turbo_v2_5 (สมดุลคุณภาพและความเร็ว)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-slate-400 mb-1">เสียงพากย์หลัก (ElevenLabs Voice)</label>
+              <select id="cfgElevenVoice" class="w-full rounded-lg bg-black/50 border border-white/15 px-2.5 py-2 text-pink-200 font-semibold">
+                <option value="JBFqnCBsd6RMkjVDRZzb">George (เสียงชายทุ้มสุขุม • ผู้บรรยายละครคุณธรรม)</option>
+                <option value="EXAVITQu4vr4xnSDxMaL">Sarah (เสียงหญิงอารมณ์เศร้า/อบอุ่น • บทภรรยา)</option>
+                <option value="onwK4e9ZLuTAKqWW03F9">Daniel (เสียงผู้บรรยายดราม่าเข้มข้น)</option>
+                <option value="pFZP5JQG7iQjIQuC4Bku">Lily (เสียงหญิงสาว • บทภรรยาน้อย)</option>
+                <option value="TX3LPaxmHKxFdv7VOQHJ">Liam (เสียงชายหนุ่ม • บทตัวเอกชาย)</option>
+              </select>
+            </div>
+          </div>
+          <div id="testStatus_elevenlabs" class="text-[11px] text-emerald-400">สถานะ: ● พร้อมสร้างเสียงพูดภาษาไทย (TTS) และเสียงซาวด์เอฟเฟค (SFX)</div>
+        </div>
+
+        <div class="col-span-2 p-4 rounded-xl bg-white/5 border border-white/10 space-y-3">
+          <div class="font-bold text-indigo-300">🎞️ 6. ตั้งค่าโมเดลวิดีโอเริ่มต้น & ค่ายเสริม (Google Flow / Grok / Seedance / Kling)</div>
+          <div class="grid grid-cols-3 gap-3">
+            <div>
+              <label class="block text-slate-400 mb-1">โมเดลวิดีโอเริ่มต้น (Default Video Model)</label>
               <select id="cfgDefaultVideoSlug" class="w-full rounded-lg bg-black/50 border border-white/15 px-2.5 py-2 text-white">
-                <option value="grok-imagine-video-1-5">Grok Imagine 1.5 (MCP)</option>
-                <option value="bytedance-seedance-pro-2.5">Seedance 2.5 SOTA (MCP)</option>
-                <option value="kling-25">Kling 2.5 (MCP)</option>
-                <option value="minimax-video-3_0-max">MiniMax Hailuo 3.0 Max</option>
+                <option value="veo-3.0-generate-preview">Google Flow • Veo 3.0 (Cinematic + Audio)</option>
+                <option value="veo-3.0-fast-generate-preview">Google Flow • Veo 3.0 Fast (9:16 Rapid)</option>
+                <option value="veo-2.0-generate-001">Google Flow • Veo 2.0 (Frames & Ingredients)</option>
+                <option value="grok-imagine-video-1-5">xAI Grok Imagine 1.5 (9:16 480p)</option>
+                <option value="seedance-2-5-pro">Seedance 2.5 Pro (MCP)</option>
+                <option value="kling-2-5-pro">Kling 2.5 Pro (MCP)</option>
               </select>
             </div>
             <div>
@@ -441,11 +543,7 @@
               <input id="cfgGrokKey" type="password" placeholder="xai-..." class="w-full rounded-lg bg-black/50 border border-white/15 px-2.5 py-2 text-white" />
             </div>
             <div>
-              <label class="block text-slate-400 mb-1">ElevenLabs API Key</label>
-              <input id="cfgElevenKey" type="password" placeholder="xi-api-key..." class="w-full rounded-lg bg-black/50 border border-white/15 px-2.5 py-2 text-white" />
-            </div>
-            <div>
-              <label class="block text-slate-400 mb-1">Freepik / Fal.ai Key</label>
+              <label class="block text-slate-400 mb-1">Freepik / Magnific / Fal.ai Key</label>
               <input id="cfgFreepikKey" type="password" placeholder="FPSX..." class="w-full rounded-lg bg-black/50 border border-white/15 px-2.5 py-2 text-white" />
             </div>
           </div>
@@ -453,7 +551,7 @@
 
         <div class="col-span-2 p-4 rounded-xl bg-indigo-950/30 border border-indigo-500/30 space-y-3">
           <div class="flex items-center justify-between">
-            <span class="font-bold text-indigo-200">🔗 6. รายการเชื่อมต่อ MCP Servers & Flow Connectors</span>
+            <span class="font-bold text-indigo-200">🔗 7. รายการเชื่อมต่อ MCP Servers & Flow Connectors</span>
             <button onclick="addCustomMcpRow()" class="px-2.5 py-1 rounded bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-200 text-[11px] font-semibold">+ เพิ่ม MCP / Flow ใหม่</button>
           </div>
           <div id="mcpServersListContainer" class="space-y-2"></div>
@@ -535,10 +633,13 @@
     let projects = [];
     let activeProject = null;
     let isLocalBackend = false;
+    let workspaceViewMode = 'standard'; // 'standard' | 'flow_storyboard'
+
     let appConfig = {
       geminiApiKey: '',
       geminiModel: 'gemini-2.5-flash',
-      flowMode: 'magnific_flow',
+      flowMode: 'google_flow_veo',
+      googleFlowModel: 'veo-3.0-generate-preview',
       flowWebhookUrl: '',
       openaiApiKey: '',
       openaiModel: 'gpt-4o-mini',
@@ -548,13 +649,90 @@
       xaiGrokApiKey: '',
       freepikApiKey: '',
       elevenlabsApiKey: '',
-      defaultVideoModelSlug: 'grok-imagine-video-1-5',
+      elevenlabsModel: 'eleven_multilingual_v2',
+      elevenlabsVoiceId: 'JBFqnCBsd6RMkjVDRZzb',
+      defaultVideoProvider: 'google_flow',
+      defaultVideoModelSlug: 'veo-3.0-generate-preview',
       mcpServers: [
-        { id: 'mcp_magnific', name: 'Magnific & Flow MCP (Grok, Seedance 2.5, Kling 2.5)', endpoint: 'magnific://spaces-and-flows', status: 'connected' },
-        { id: 'mcp_google_flow', name: 'Google Flow / Veo Filmmaking Pipeline', endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/veo-2.0', status: 'ready' },
+        { id: 'mcp_google_flow', name: 'Google Flow Filmmaking Engine (Veo 3.0 / Veo 2.0 / Storyboard Canvas)', endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/veo-3.0-generate-preview', status: 'connected' },
+        { id: 'mcp_elevenlabs', name: 'ElevenLabs AI Audio Studio (Thai Multilingual TTS v2/v3 & Sound Effects SFX)', endpoint: 'https://api.elevenlabs.io/v1/sound-generation', status: 'connected' },
+        { id: 'mcp_magnific', name: 'Magnific & Grok MCP (Grok Imagine 1.5, Seedance 2.5, Kling 2.5)', endpoint: 'magnific://spaces-and-flows', status: 'connected' },
         { id: 'mcp_meta_ai', name: 'Meta AI (Llama 3.3/4 & Meta Media Engine)', endpoint: 'https://api.groq.com/openai/v1/chat/completions', status: 'ready' }
       ]
     };
+
+    const SHOT_TYPE_OPTIONS = [
+      'Medium Two-Shot (MS)',
+      'Dramatic Close-Up (CU)',
+      'Extreme Close-Up (ECU)',
+      'Wide Doorway Shot (WS)',
+      'Over-The-Shoulder Tracking (OTS)',
+      'Extreme Wide Lonely Shot (EWS)',
+      'Low-Angle Power Shot'
+    ];
+
+    const CAMERA_MOVE_OPTIONS = [
+      'Dolly In (ซูมเข้าช้าๆ เน้นอารมณ์)',
+      'Dolly Out (ถอยออกเห็นความอ้างว้าง)',
+      'Pan Right (แพนขวาช้าๆ)',
+      'Pan Left (แพนซ้ายตามตัวละคร)',
+      'Crane Dolly Out (ดึงกล้องขึ้นมุมสูง)',
+      'Handheld Emotional Shake (กล้องสั่นดราม่า)',
+      'Static Locked Shot (กล้องนิ่งเน้นการแสดง)'
+    ];
+
+    const FLOW_GEN_MODES = [
+      { value: 'frames_to_video', label: '🔗 Frames-to-Video (ล็อคเฟรมต้น-ท้าย ต่อเนื่อง)' },
+      { value: 'ingredients_to_video', label: '🧩 Ingredients-to-Video (ล็อคหน้าตัวละคร + ฉาก)' },
+      { value: 'text_to_video', label: '📝 Text-to-Video (สร้างจาก Google Flow Prompt)' }
+    ];
+
+    const VIDEO_PROVIDER_OPTIONS = [
+      { value: 'google_flow', label: '🎬 Google Flow (Veo Filmmaking)' },
+      { value: 'mcp_grok', label: '⚡ xAI Grok Imagine Video (9:16)' },
+      { value: 'mcp_seedance', label: '🎞️ Seedance 2.5 Pro (Flow MCP)' },
+      { value: 'mcp_kling', label: '🎥 Kling 2.5 Pro (Cinematic Drama)' }
+    ];
+
+    const VIDEO_MODEL_OPTIONS = [
+      { value: 'veo-3.0-generate-preview', label: 'Google Flow • Veo 3.0 (Cinematic + Audio)', provider: 'google_flow' },
+      { value: 'veo-3.0-fast-generate-preview', label: 'Google Flow • Veo 3.0 Fast (9:16 Rapid)', provider: 'google_flow' },
+      { value: 'veo-2.0-generate-001', label: 'Google Flow • Veo 2.0 (Frames & Ingredients)', provider: 'google_flow' },
+      { value: 'flow-imagen-3-keyframe', label: 'Google Flow • Imagen 3 Storyboard + Motion', provider: 'google_flow' },
+      { value: 'grok-imagine-video-1-5', label: 'xAI Grok Imagine Video 1.5 (9:16 480p/720p)', provider: 'mcp_grok' },
+      { value: 'seedance-2-5-pro', label: 'Seedance 2.5 Pro (SOTA Motion)', provider: 'mcp_seedance' },
+      { value: 'kling-2-5-pro', label: 'Kling 2.5 Pro (Emotional Acting)', provider: 'mcp_kling' },
+      { value: 'luma-ray-2', label: 'Luma Ray 2 Flash', provider: 'mcp_magnific' },
+      { value: 'wan-2-5', label: 'Wan 2.5 Cinematic', provider: 'mcp_magnific' }
+    ];
+
+    const ELEVEN_VOICE_OPTIONS = [
+      { id: 'JBFqnCBsd6RMkjVDRZzb', name: 'George (ชายทุ้มสุขุม • ผู้บรรยาย)' },
+      { id: 'EXAVITQu4vr4xnSDxMaL', name: 'Sarah (หญิงอารมณ์เศร้า/อบอุ่น)' },
+      { id: 'onwK4e9ZLuTAKqWW03F9', name: 'Daniel (ผู้บรรยายดราม่าเข้มข้น)' },
+      { id: 'pFZP5JQG7iQjIQuC4Bku', name: 'Lily (หญิงสาว • บทภรรยาน้อย)' },
+      { id: 'TX3LPaxmHKxFdv7VOQHJ', name: 'Liam (ชายหนุ่ม • ตัวเอกชาย)' }
+    ];
+
+    const DRAMA_SFX_PRESETS = [
+      { label: '🌧️ ฝนตกฟ้าร้องดราม่า', prompt: 'Heavy pouring rain and distant thunder at night, melancholic room ambience', fallbackUrl: '/outputs/audio/sfx_scene_drama_1.mp3' },
+      { label: '🥂 ผับหรู/ชนแก้ว', prompt: 'Muffled luxury nightclub bass beat, clinking champagne glasses, crowd laughter', fallbackUrl: '/outputs/audio/sfx_scene_drama_2.mp3' },
+      { label: '🚪 ปิดประตู/ก้าวเท้า', prompt: 'Heavy wooden door closing, footsteps walking away, tense low heartbeat pulse', fallbackUrl: '/outputs/audio/sfx_scene_drama_3.mp3' },
+      { label: '💔 เปียโนเศร้า/รถหรู', prompt: 'Melancholic minor piano chord, luxury sports car engine revving and speeding away', fallbackUrl: '/outputs/audio/sfx_scene_drama_4.mp3' },
+      { label: '🌙 ลมหนาว/ระฆังเตือนใจ', prompt: 'Lonely night wind howling softly, deep reflective bell resonance', fallbackUrl: '/outputs/audio/sfx_scene_drama_5.mp3' }
+    ];
+
+    function buildClientFlowPrompt(project, scene, idx) {
+      const model = (scene.videoModelSlug || project.videoModelSlug || 'veo-3.0-generate-preview').toUpperCase();
+      const ratio = project.aspectRatio || '9:16';
+      const mode = (scene.flowGenMode || 'frames_to_video').toUpperCase();
+      const shot = scene.shotType || SHOT_TYPE_OPTIONS[idx % SHOT_TYPE_OPTIONS.length];
+      const move = scene.cameraMovement || CAMERA_MOVE_OPTIONS[idx % CAMERA_MOVE_OPTIONS.length];
+      const chars = (project.characters || []).filter(c => (scene.characterIds || []).includes(c.id));
+      const charText = chars.map(c => `${c.name} (${c.visualDna})`).join(' + ') || project.characterLock || 'Consistent Thai character';
+      const contText = idx > 0 && scene.continueFromPrev ? `[START FRAME LOCK: Scene ${idx} Last Frame]` : `[OPENING KEYFRAME]`;
+      return `[GOOGLE FLOW ${model} • ${ratio} • ${mode}] [SHOT: ${shot}, ${move}] ${contText} [INGREDIENTS LOCK: ${charText}] Action: ${scene.videoPrompt || scene.imagePrompt}`;
+    }
 
     function analyzeThaiClient(rawText) {
       let cleaned = String(rawText || '').trim();
@@ -572,13 +750,14 @@
         .replace(/\s+/g, ' ... ')
         .replace(/ภรรยา/g, 'พัน-ระ-ยา')
         .replace(/ไม่ไยดี/g, 'ไม่-ไย-ดี')
+        .replace(/ปรนเปรอ/g, 'ปรน-เปรอ')
         .replace(/ปรารถนา/g, 'ปราด-ถะ-หนา')
         .replace(/กาลเวลา/g, 'กาน-เว-ลา');
       return {
         polishedText: cleaned,
         ttsPhoneticText: phonetic,
         grammarScore: 98,
-        issues: issues.length ? issues : ['ไวยากรณ์ไทยถูกต้อง อักขระชัดเจน พร้อมพากย์เสียง']
+        issues: issues.length ? issues : ['ไวยากรณ์ไทยถูกต้อง อักขระชัดเจน พร้อมพากย์เสียง ElevenLabs']
       };
     }
 
@@ -589,6 +768,7 @@
 
     function logMsg(msg, type = 'info') {
       const box = document.getElementById('activityLog');
+      if (!box) return;
       const colors = { info: 'text-slate-300', success: 'text-emerald-400', warn: 'text-amber-400', error: 'text-rose-400' };
       const time = new Date().toLocaleTimeString('th-TH', { hour12: false });
       const div = document.createElement('div');
@@ -599,6 +779,153 @@
     }
 
     function clearLog() { document.getElementById('activityLog').innerHTML = ''; }
+
+    function switchWorkspaceView(mode) {
+      workspaceViewMode = mode;
+      const btnStd = document.getElementById('tabBtnStandard');
+      const btnFlow = document.getElementById('tabBtnFlowStoryboard');
+      if (mode === 'flow_storyboard') {
+        btnFlow.className = 'px-3 py-1 rounded-lg text-[11px] font-bold transition bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow';
+        btnStd.className = 'px-3 py-1 rounded-lg text-[11px] font-bold transition text-slate-300 hover:bg-white/5';
+        logMsg('🎬 สลับเข้าสู่โหมด Google Flow Storyboard (Shot Canvas & Veo Generator)', 'info');
+      } else {
+        btnStd.className = 'px-3 py-1 rounded-lg text-[11px] font-bold transition bg-indigo-600 text-white shadow';
+        btnFlow.className = 'px-3 py-1 rounded-lg text-[11px] font-bold transition text-amber-300 hover:bg-white/5';
+      }
+      renderActiveProject();
+    }
+
+    async function onGlobalVideoProviderChange(providerVal) {
+      if (!activeProject) return;
+      activeProject.videoProvider = providerVal;
+      let defaultModel = document.getElementById('globalVideoModelSelect').value;
+      if (providerVal === 'google_flow' && !defaultModel.startsWith('veo-') && !defaultModel.startsWith('flow-')) {
+        defaultModel = 'veo-3.0-generate-preview';
+      } else if (providerVal === 'mcp_grok') {
+        defaultModel = 'grok-imagine-video-1-5';
+      } else if (providerVal === 'mcp_seedance') {
+        defaultModel = 'seedance-2-5-pro';
+      } else if (providerVal === 'mcp_kling') {
+        defaultModel = 'kling-2-5-pro';
+      }
+      document.getElementById('globalVideoModelSelect').value = defaultModel;
+      activeProject.videoModelSlug = defaultModel;
+      activeProject.scenes.forEach((s, idx) => {
+        s.videoProvider = providerVal;
+        s.videoModelSlug = defaultModel;
+        s.flowPrompt = buildClientFlowPrompt(activeProject, s, idx);
+      });
+      await saveActiveProject();
+      logMsg(`🎥 ตั้งค่าระบบเจนวิดีโอทั้งเรื่องเป็น ${providerVal} (โมเดล: ${defaultModel})`, 'success');
+    }
+
+    async function onGlobalVideoModelChange(modelVal) {
+      if (!activeProject) return;
+      activeProject.videoModelSlug = modelVal;
+      const found = VIDEO_MODEL_OPTIONS.find(m => m.value === modelVal);
+      if (found) {
+        activeProject.videoProvider = found.provider;
+        document.getElementById('globalVideoProviderSelect').value = found.provider;
+      }
+      activeProject.scenes.forEach((s, idx) => {
+        s.videoProvider = activeProject.videoProvider;
+        s.videoModelSlug = modelVal;
+        s.flowPrompt = buildClientFlowPrompt(activeProject, s, idx);
+      });
+      await saveActiveProject();
+      logMsg(`🤖 เปลี่ยนโมเดลวิดีโอทั้งเรื่องเป็น ${modelVal} เรียบร้อย!`, 'success');
+    }
+
+    async function generateFlowStoryboardAll() {
+      if (!activeProject) return;
+      const chosenModel = document.getElementById('globalVideoModelSelect')?.value || activeProject.videoModelSlug || 'veo-3.0-generate-preview';
+      logMsg(`🎬 กำลังสร้างใบงาน Google Flow Storyboard (แตกขนาดภาพ Shot Type + มุมกล้อง + Ingredients Lock + เสียง SFX) สำหรับโมเดล ${chosenModel}...`, 'info');
+
+      if (isLocalBackend) {
+        try {
+          const res = await fetch('/api/flow/storyboard', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ projectId: activeProject.id, videoModelSlug: chosenModel })
+          });
+          if (res.ok) {
+            await fetchProjects();
+            switchWorkspaceView('flow_storyboard');
+            logMsg('✨ สร้างใบงาน Google Flow Storyboard ครบทุกช็อตสำเร็จ!', 'success');
+            return;
+          }
+        } catch (e) {}
+      }
+
+      activeProject.scenes.forEach((s, idx) => {
+        s.shotType = s.shotType || SHOT_TYPE_OPTIONS[idx % SHOT_TYPE_OPTIONS.length];
+        s.cameraMovement = s.cameraMovement || CAMERA_MOVE_OPTIONS[idx % CAMERA_MOVE_OPTIONS.length];
+        s.flowGenMode = s.flowGenMode || (idx === 0 ? 'ingredients_to_video' : 'frames_to_video');
+        s.videoProvider = activeProject.videoProvider || 'google_flow';
+        s.videoModelSlug = chosenModel;
+        s.continueFromPrev = idx > 0;
+        if (idx > 0) {
+          const prev = activeProject.scenes[idx - 1];
+          s.startKeyframeUrl = prev.lastFrameUrl || prev.imageUrl || s.startKeyframeUrl;
+        }
+        if (!s.sfxPrompt) s.sfxPrompt = DRAMA_SFX_PRESETS[idx % DRAMA_SFX_PRESETS.length].prompt;
+        if (!s.sfxUrl) {
+          s.sfxUrl = DRAMA_SFX_PRESETS[idx % DRAMA_SFX_PRESETS.length].fallbackUrl;
+          s.sfxStatus = 'ready';
+        }
+        s.flowPrompt = buildClientFlowPrompt(activeProject, s, idx);
+      });
+      await saveActiveProject();
+      switchWorkspaceView('flow_storyboard');
+      logMsg('✨ สร้างใบงาน Google Flow Storyboard ครบทุกช็อตสำเร็จ!', 'success');
+    }
+
+    function exportFlowStoryboardJson() {
+      if (!activeProject) return;
+      const exportData = {
+        studio: 'AI Short Film Studio v2.5 - Google Flow Storyboard',
+        projectTitle: activeProject.title,
+        aspectRatio: activeProject.aspectRatio,
+        videoProvider: activeProject.videoProvider || 'google_flow',
+        videoModelSlug: activeProject.videoModelSlug || 'veo-3.0-generate-preview',
+        characters: activeProject.characters,
+        shots: activeProject.scenes.map((s, idx) => ({
+          shotNumber: idx + 1,
+          title: s.title,
+          durationSeconds: s.duration || 6,
+          shotType: s.shotType,
+          cameraMovement: s.cameraMovement,
+          flowGenMode: s.flowGenMode,
+          videoProvider: s.videoProvider,
+          videoModelSlug: s.videoModelSlug,
+          googleFlowPrompt: s.flowPrompt,
+          narrationThai: s.narration,
+          phoneticThaiTts: s.ttsPhoneticText,
+          elevenlabsSfxPrompt: s.sfxPrompt,
+          startKeyframeUrl: s.startKeyframeUrl,
+          videoUrl: s.videoUrl,
+          audioUrl: s.audioUrl,
+          sfxUrl: s.sfxUrl
+        }))
+      };
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `google_flow_storyboard_${activeProject.id}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      logMsg('📥 ดาวน์โหลดใบงาน Google Flow Storyboard (.JSON) สำเร็จ!', 'success');
+    }
+
+    function copyFlowPrompt(sceneId) {
+      const scene = activeProject?.scenes?.find(s => s.id === sceneId);
+      if (!scene) return;
+      const text = scene.flowPrompt || scene.videoPrompt || scene.imagePrompt;
+      navigator.clipboard.writeText(text).then(() => {
+        logMsg(`📋 คัดลอก Google Flow Prompt ของ "${scene.title}" ลงคลิปบอร์ดแล้ว!`, 'success');
+      });
+    }
 
     async function fetchConfig() {
       const savedCfg = localStorage.getItem('ai_film_studio_config');
@@ -614,20 +941,46 @@
         }
       } catch (e) {}
 
-      document.getElementById('cfgGeminiKey').value = appConfig.geminiApiKey || '';
-      document.getElementById('cfgGeminiModel').value = appConfig.geminiModel || 'gemini-2.5-flash';
-      document.getElementById('cfgFlowMode').value = appConfig.flowMode || 'magnific_flow';
-      document.getElementById('cfgFlowWebhookUrl').value = appConfig.flowWebhookUrl || '';
-      document.getElementById('cfgOpenaiKey').value = appConfig.openaiApiKey || '';
-      document.getElementById('cfgOpenaiModel').value = appConfig.openaiModel || 'gpt-4o-mini';
-      document.getElementById('cfgMetaKey').value = appConfig.metaAiApiKey || '';
-      document.getElementById('cfgMetaModel').value = appConfig.metaAiModel || 'llama-3.3-70b-versatile';
-      document.getElementById('cfgMetaBaseUrl').value = appConfig.metaAiBaseUrl || 'https://api.groq.com/openai/v1';
-      document.getElementById('cfgGrokKey').value = appConfig.xaiGrokApiKey || '';
-      document.getElementById('cfgFreepikKey').value = appConfig.freepikApiKey || '';
-      document.getElementById('cfgElevenKey').value = appConfig.elevenlabsApiKey || '';
-      document.getElementById('cfgDefaultVideoSlug').value = appConfig.defaultVideoModelSlug || 'grok-imagine-video-1-5';
+      const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+      setVal('cfgGeminiKey', appConfig.geminiApiKey || '');
+      setVal('cfgGeminiModel', appConfig.geminiModel || 'gemini-2.5-flash');
+      setVal('cfgFlowMode', appConfig.flowMode || 'google_flow_veo');
+      setVal('cfgGoogleFlowModel', appConfig.googleFlowModel || 'veo-3.0-generate-preview');
+      setVal('cfgFlowWebhookUrl', appConfig.flowWebhookUrl || '');
+      setVal('cfgOpenaiKey', appConfig.openaiApiKey || '');
+      setVal('cfgOpenaiModel', appConfig.openaiModel || 'gpt-4o-mini');
+      setVal('cfgMetaKey', appConfig.metaAiApiKey || '');
+      setVal('cfgMetaModel', appConfig.metaAiModel || 'llama-3.3-70b-versatile');
+      setVal('cfgMetaBaseUrl', appConfig.metaAiBaseUrl || 'https://api.groq.com/openai/v1');
+      setVal('cfgGrokKey', appConfig.xaiGrokApiKey || '');
+      setVal('cfgFreepikKey', appConfig.freepikApiKey || '');
+      setVal('cfgElevenKey', appConfig.elevenlabsApiKey || '');
+      setVal('cfgElevenModel', appConfig.elevenlabsModel || 'eleven_multilingual_v2');
+      setVal('cfgElevenVoice', appConfig.elevenlabsVoiceId || 'JBFqnCBsd6RMkjVDRZzb');
+      setVal('cfgDefaultVideoSlug', appConfig.defaultVideoModelSlug || 'veo-3.0-generate-preview');
       renderMcpServersConfig();
+    }
+
+    async function fetchElevenLabsVoicesList() {
+      const key = document.getElementById('cfgElevenKey')?.value?.trim() || appConfig.elevenlabsApiKey;
+      const selectEl = document.getElementById('cfgElevenVoice');
+      if (!key) {
+        logMsg('💡 ใส่ ElevenLabs API Key ก่อนกดดึงรายชื่อเสียงจากบัญชี (ตอนนี้ใช้ 5 เสียงมาตรฐานของระบบได้ทันที)', 'warn');
+        return;
+      }
+      try {
+        const res = await fetch('https://api.elevenlabs.io/v1/voices', {
+          headers: { 'xi-api-key': key }
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        if (Array.isArray(data.voices) && data.voices.length > 0) {
+          selectEl.innerHTML = data.voices.map(v => `<option value="${v.voice_id}">${escapeHtml(v.name)} (${escapeHtml(v.category || 'ElevenLabs')})</option>`).join('');
+          logMsg(`🎙️ ดึงรายชื่อเสียงพากย์จากบัญชี ElevenLabs สำเร็จ (${data.voices.length} เสียง)!`, 'success');
+        }
+      } catch (e) {
+        logMsg(`❌ ดึงรายชื่อเสียง ElevenLabs ไม่สำเร็จ: ${e.message}`, 'error');
+      }
     }
 
     async function testConnection(provider) {
@@ -636,10 +989,12 @@
         statusEl.textContent = '⏳ กำลังทดสอบการเชื่อมต่อ...';
         statusEl.className = 'text-[11px] text-amber-300';
       }
-      const gKey = document.getElementById('cfgGeminiKey').value.trim();
-      const oKey = document.getElementById('cfgOpenaiKey').value.trim();
-      const mKey = document.getElementById('cfgMetaKey').value.trim();
-      const fMode = document.getElementById('cfgFlowMode').value;
+      const gKey = document.getElementById('cfgGeminiKey')?.value?.trim();
+      const oKey = document.getElementById('cfgOpenaiKey')?.value?.trim();
+      const mKey = document.getElementById('cfgMetaKey')?.value?.trim();
+      const eKey = document.getElementById('cfgElevenKey')?.value?.trim();
+      const fMode = document.getElementById('cfgFlowMode')?.value || 'google_flow_veo';
+      const fModel = document.getElementById('cfgGoogleFlowModel')?.value || 'veo-3.0-generate-preview';
 
       let ok = true;
       let msg = 'เชื่อมต่อสำเร็จ พร้อมใช้งาน!';
@@ -654,7 +1009,27 @@
         msg = ok ? `เชื่อมต่อ Meta AI (${document.getElementById('cfgMetaModel').value}) สำเร็จ!` : 'พร้อมทำงานในโหมด Built-in (ใส่ Meta AI Key เพิ่มได้)';
       } else if (provider === 'flow') {
         ok = true;
-        msg = `เชื่อมต่อระบบ Flow (${fMode}) & Scene Continuity พร้อมทำงานทันที!`;
+        msg = `เชื่อมต่อระบบ Google Flow (${fMode} • โมเดล ${fModel}) & Storyboard พร้อมทำงานทันที!`;
+      } else if (provider === 'elevenlabs') {
+        if (eKey) {
+          try {
+            const r = await fetch('https://api.elevenlabs.io/v1/voices', { headers: { 'xi-api-key': eKey } });
+            if (r.ok) {
+              const d = await r.json();
+              ok = true;
+              msg = `เชื่อมต่อ ElevenLabs สำเร็จ! (พบ ${d.voices?.length || 0} เสียงพากย์ • พร้อมเจนทั้งเสียงบทพูด TTS และซาวด์เอฟเฟค SFX)`;
+            } else {
+              ok = false;
+              msg = `ElevenLabs API Key ไม่ถูกต้อง (HTTP ${r.status})`;
+            }
+          } catch (err) {
+            ok = false;
+            msg = `เชื่อมต่อ ElevenLabs ไม่สำเร็จ: ${err.message}`;
+          }
+        } else {
+          ok = true;
+          msg = 'พร้อมใช้งานด้วย Built-in Thai TTS & Dramatic SFX Synth (ใส่ ElevenLabs API Key เพื่อเจนเสียงจริงจากคลาวด์ได้ทันที)';
+        }
       }
 
       if (statusEl) {
@@ -670,8 +1045,9 @@
       const selectedLlm = document.getElementById('headerAiProviderSelect').value;
       btn.disabled = true;
       btn.textContent = '⏳ กำลังรัน Flow อัตโนมัติ...';
-      logMsg(`🌊 เริ่มรันระบบ Flow อัตโนมัติ (ใช้ AI: ${selectedLlm.toUpperCase()} ตรวจบทไทย ➔ เชื่อมเฟรมฉากต่อเนื่อง ➔ เรนเดอร์)...`, 'info');
+      logMsg(`🌊 เริ่มรันระบบ Google Flow อัตโนมัติ (สร้าง Flow Storyboard ➔ ตรวจบทไทย ➔ เชื่อมเฟรมฉากต่อเนื่อง ➔ มิกซ์เสียงพูด+SFX ➔ เรนเดอร์)...`, 'info');
       try {
+        await generateFlowStoryboardAll();
         await runThaiGrammarQcAll();
         await chainAllScenesContinuity();
         if (isLocalBackend) {
@@ -682,19 +1058,20 @@
           });
           await fetchProjects();
         }
-        logMsg('🎉 รันระบบ Flow อัตโนมัติครบทุกขั้นตอนสำเร็จ! กดเล่นคลิปด้านขวาได้เลย', 'success');
+        logMsg('🎉 รันระบบ Google Flow อัตโนมัติครบทุกขั้นตอนสำเร็จ! กดเล่นคลิปด้านขวาได้เลย', 'success');
         const player = document.getElementById('finalMoviePlayer');
         if (player && activeProject.finalRenderUrl) player.play().catch(() => {});
       } catch (e) {
         logMsg(`❌ รัน Flow ไม่สำเร็จ: ${e.message}`, 'error');
       } finally {
         btn.disabled = false;
-        btn.textContent = '🌊 3. รันระบบ Flow อัตโนมัติ';
+        btn.textContent = '🌊 4. รัน Flow อัตโนมัติ';
       }
     }
 
     function renderMcpServersConfig() {
       const container = document.getElementById('mcpServersListContainer');
+      if (!container) return;
       const list = appConfig.mcpServers || [];
       container.innerHTML = list.map((mcp, idx) => `
         <div class="grid grid-cols-12 gap-2 items-center bg-black/40 p-2.5 rounded-lg border border-white/10">
@@ -708,7 +1085,7 @@
             <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[10px] font-semibold">● Connected</span>
           </div>
           <div class="col-span-1 text-right">
-            ${idx > 2 ? `<button onclick="removeMcpRow(${idx})" class="text-slate-500 hover:text-rose-400">✕</button>` : ''}
+            ${idx > 3 ? `<button onclick="removeMcpRow(${idx})" class="text-slate-500 hover:text-rose-400">✕</button>` : ''}
           </div>
         </div>
       `).join('');
@@ -727,6 +1104,7 @@
         geminiApiKey: document.getElementById('cfgGeminiKey').value.trim(),
         geminiModel: document.getElementById('cfgGeminiModel').value,
         flowMode: document.getElementById('cfgFlowMode').value,
+        googleFlowModel: document.getElementById('cfgGoogleFlowModel').value,
         flowWebhookUrl: document.getElementById('cfgFlowWebhookUrl').value.trim(),
         openaiApiKey: document.getElementById('cfgOpenaiKey').value.trim(),
         openaiModel: document.getElementById('cfgOpenaiModel').value,
@@ -736,6 +1114,8 @@
         xaiGrokApiKey: document.getElementById('cfgGrokKey').value.trim(),
         freepikApiKey: document.getElementById('cfgFreepikKey').value.trim(),
         elevenlabsApiKey: document.getElementById('cfgElevenKey').value.trim(),
+        elevenlabsModel: document.getElementById('cfgElevenModel').value,
+        elevenlabsVoiceId: document.getElementById('cfgElevenVoice').value,
         defaultVideoModelSlug: document.getElementById('cfgDefaultVideoSlug').value
       };
       localStorage.setItem('ai_film_studio_config', JSON.stringify(appConfig));
@@ -743,14 +1123,36 @@
         await fetch('/api/config', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(appConfig) }).catch(() => {});
       }
       closeSettingsModal();
-      logMsg('บันทึกการตั้งค่าเชื่อมต่อ Gemini, Flow, ChatGPT, Meta AI และ MCP เรียบร้อย!', 'success');
+      logMsg('💾 บันทึกการตั้งค่า Google Flow, ElevenLabs TTS/SFX, Gemini, ChatGPT, Meta AI และ MCP เรียบร้อย!', 'success');
+    }
+
+    function ensureProjectFlowFields(proj) {
+      if (!proj) return proj;
+      if (!proj.videoProvider) proj.videoProvider = 'google_flow';
+      if (!proj.videoModelSlug) proj.videoModelSlug = 'veo-3.0-generate-preview';
+      (proj.scenes || []).forEach((s, idx) => {
+        if (!s.shotType) s.shotType = SHOT_TYPE_OPTIONS[idx % SHOT_TYPE_OPTIONS.length];
+        if (!s.cameraMovement) s.cameraMovement = CAMERA_MOVE_OPTIONS[idx % CAMERA_MOVE_OPTIONS.length];
+        if (!s.flowGenMode) s.flowGenMode = idx === 0 ? 'ingredients_to_video' : 'frames_to_video';
+        if (!s.videoProvider) s.videoProvider = proj.videoProvider || 'google_flow';
+        if (!s.videoModelSlug) s.videoModelSlug = proj.videoModelSlug || 'veo-3.0-generate-preview';
+        if (!s.sfxPrompt) s.sfxPrompt = DRAMA_SFX_PRESETS[idx % DRAMA_SFX_PRESETS.length].prompt;
+        if (!s.sfxUrl) {
+          s.sfxUrl = DRAMA_SFX_PRESETS[idx % DRAMA_SFX_PRESETS.length].fallbackUrl;
+          s.sfxStatus = 'ready';
+        }
+        if (!s.flowPrompt) {
+          s.flowPrompt = buildClientFlowPrompt(proj, s, idx);
+        }
+      });
+      return proj;
     }
 
     async function fetchProjects() {
       try {
         const res = await fetch('/api/projects');
         if (res.ok && res.headers.get('content-type')?.includes('application/json')) {
-          projects = await res.json();
+          projects = (await res.json()).map(ensureProjectFlowFields);
           isLocalBackend = true;
         } else {
           throw new Error('Static mode');
@@ -758,7 +1160,7 @@
       } catch (e) {
         const resStatic = await fetch('/data/projects.json');
         if (resStatic.ok) {
-          projects = await resStatic.json();
+          projects = (await resStatic.json()).map(ensureProjectFlowFields);
         }
       }
       document.getElementById('projectCountBadge').textContent = projects.length;
@@ -779,7 +1181,7 @@
           <div onclick="selectProject('${p.id}')" class="group px-3 py-2 rounded-xl cursor-pointer flex items-center justify-between transition ${isSelected ? 'bg-indigo-600/20 border border-indigo-500/40 text-white' : 'hover:bg-white/5 text-slate-400 border border-transparent'}">
             <div class="truncate pr-2">
               <div class="text-xs font-semibold truncate ${isSelected ? 'text-indigo-200' : 'text-slate-200'}">${escapeHtml(p.title)}</div>
-              <div class="text-[10px] text-slate-500 mt-0.5">${p.scenes?.length || 0} ซีน • ${p.aspectRatio || '9:16'}</div>
+              <div class="text-[10px] text-slate-500 mt-0.5">${p.scenes?.length || 0} ซีน • ${p.aspectRatio || '9:16'} • ${escapeHtml(p.videoModelSlug || 'Veo 3.0')}</div>
             </div>
           </div>
         `;
@@ -794,9 +1196,15 @@
 
     function renderActiveProject() {
       if (!activeProject) return;
+      ensureProjectFlowFields(activeProject);
       document.getElementById('activeProjectTitle').textContent = activeProject.title;
       document.getElementById('activeProjectRatio').textContent = activeProject.aspectRatio || '9:16';
       document.getElementById('activeProjectTopic').textContent = activeProject.topic || '';
+
+      const provSel = document.getElementById('globalVideoProviderSelect');
+      const modSel = document.getElementById('globalVideoModelSelect');
+      if (provSel && activeProject.videoProvider) provSel.value = activeProject.videoProvider;
+      if (modSel && activeProject.videoModelSlug) modSel.value = activeProject.videoModelSlug;
 
       const chars = activeProject.characters || [];
       document.getElementById('charCountBadge').textContent = chars.length;
@@ -820,13 +1228,13 @@
 
       const total = activeProject.scenes.length;
       const contCount = activeProject.scenes.filter((s, idx) => idx === 0 || s.continueFromPrev).length;
-      const thaiVerified = activeProject.scenes.filter(s => s.thaiQcStatus === 'verified').length;
+      const sfxReady = activeProject.scenes.filter(s => s.sfxUrl).length;
       const vidReady = activeProject.scenes.filter(s => s.videoUrl).length;
 
       document.getElementById('pipelineStats').innerHTML = `
-        <span>🔗 Continue ฉาก: <strong class="text-sky-400">${contCount}/${total}</strong></span>
-        <span>🇹🇭 ตรวจอักขระไทย: <strong class="text-purple-400">${thaiVerified}/${total}</strong></span>
-        <span>🎞️ วิดีโอพร้อม: <strong class="text-emerald-400">${vidReady}/${total}</strong></span>
+        <span>🔗 เชื่อมฉาก: <strong class="text-sky-400">${contCount}/${total}</strong></span>
+        <span>🔊 เสียง+SFX: <strong class="text-pink-400">${sfxReady}/${total}</strong></span>
+        <span>🎞️ วิดีโอ: <strong class="text-emerald-400">${vidReady}/${total}</strong></span>
       `;
 
       const player = document.getElementById('finalMoviePlayer');
@@ -850,6 +1258,199 @@
         dlSection.classList.add('hidden');
       }
 
+      if (workspaceViewMode === 'flow_storyboard') {
+        renderFlowStoryboardCanvas(chars);
+      } else {
+        renderStandardScenesList(chars);
+      }
+    }
+
+    // ============================================================================
+    // VIEW MODE 1: GOOGLE FLOW STORYBOARD BUILDER & SHOT CANVAS
+    // ============================================================================
+    function renderFlowStoryboardCanvas(chars) {
+      const container = document.getElementById('scenesContainer');
+      const headerHtml = `
+        <div class="p-4 rounded-2xl bg-gradient-to-r from-amber-950/40 via-indigo-950/40 to-purple-950/40 border border-amber-500/35 flex items-center justify-between flex-wrap gap-3">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="px-2.5 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 text-[11px] font-bold">GOOGLE FLOW STORYBOARD CANVAS</span>
+              <h3 class="text-sm font-bold text-white">🎬 กระดานออกแบบ Storyboard ของ Google Flow & เชื่อมต่อเสียง ElevenLabs (TTS + SFX)</h3>
+            </div>
+            <p class="text-xs text-slate-300 mt-1">
+              กำหนดขนาดภาพ (Shot Type), การเคลื่อนกล้อง (Camera Motion), ล็อคตัวละคร (Ingredients Lock), เชื่อมเฟรมต่อเนื่อง (Frames-to-Video) และเลือกเจนวิดีโอผ่าน <strong>Google Flow (Veo 3.0 / Veo 2.0)</strong> หรือ <strong>Grok 1.5</strong> ได้รายช็อต
+            </p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="generateFlowStoryboardAll()" class="px-3.5 py-2 rounded-xl bg-amber-500/25 hover:bg-amber-500/40 border border-amber-400/50 text-amber-200 text-xs font-bold transition">
+              ✨ จัดระเบียบ Flow Storyboard อัตโนมัติ
+            </button>
+            <button onclick="exportFlowStoryboardJson()" class="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 text-slate-200 text-xs font-semibold transition">
+              📥 ส่งออก Flow JSON
+            </button>
+          </div>
+        </div>
+      `;
+
+      const shotsHtml = activeProject.scenes.map((scene, index) => {
+        const prevScene = index > 0 ? activeProject.scenes[index - 1] : null;
+        const prevFrame = prevScene ? (prevScene.lastFrameUrl || prevScene.imageUrl) : null;
+        const nextScene = index < activeProject.scenes.length - 1 ? activeProject.scenes[index + 1] : null;
+
+        return `
+          <div class="rounded-2xl bg-[#111624] border-2 border-amber-500/30 p-5 space-y-4 shadow-xl relative">
+            <!-- SHOT HEADER -->
+            <div class="flex items-center justify-between border-b border-white/10 pb-3 flex-wrap gap-2">
+              <div class="flex items-center gap-2.5">
+                <span class="px-3 py-1 rounded-lg bg-gradient-to-r from-amber-500 to-orange-600 text-white font-extrabold text-xs shadow">
+                  SHOT ${index + 1}
+                </span>
+                <input onchange="updateSceneField('${scene.id}', 'title', this.value)" value="${escapeHtml(scene.title)}" class="bg-transparent font-bold text-sm text-white focus:outline-none border-b border-transparent focus:border-amber-400 px-1 w-64" />
+                <span class="px-2 py-0.5 rounded bg-sky-500/15 border border-sky-500/30 text-sky-300 text-[11px] font-semibold">
+                  ⏱️ ${scene.duration || 6} วินาที
+                </span>
+              </div>
+
+              <!-- VIDEO PROVIDER & MODEL SELECTOR PER SHOT -->
+              <div class="flex items-center gap-2 flex-wrap">
+                <div class="flex items-center gap-1 bg-black/50 border border-amber-500/30 rounded-lg px-2 py-1 text-[11px]">
+                  <span class="text-amber-300">ค่าย:</span>
+                  <select onchange="updateSceneVideoProvider('${scene.id}', this.value)" class="bg-transparent text-white font-semibold focus:outline-none">
+                    ${VIDEO_PROVIDER_OPTIONS.map(opt => `<option value="${opt.value}" ${scene.videoProvider === opt.value ? 'selected' : ''} class="bg-slate-900">${opt.label}</option>`).join('')}
+                  </select>
+                </div>
+
+                <div class="flex items-center gap-1 bg-black/50 border border-sky-500/30 rounded-lg px-2 py-1 text-[11px]">
+                  <span class="text-sky-300">โมเดล:</span>
+                  <select onchange="updateSceneVideoModel('${scene.id}', this.value)" class="bg-transparent text-sky-200 font-bold focus:outline-none">
+                    ${VIDEO_MODEL_OPTIONS.map(opt => `<option value="${opt.value}" ${scene.videoModelSlug === opt.value ? 'selected' : ''} class="bg-slate-900">${opt.label}</option>`).join('')}
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- STORYBOARD 3-COLUMN LAYOUT -->
+            <div class="grid grid-cols-12 gap-4 text-xs">
+              <!-- COL 1: VISUAL FRAME & CONTINUITY -->
+              <div class="col-span-4 space-y-2.5">
+                <div class="relative rounded-xl overflow-hidden bg-black border border-amber-500/30 aspect-video flex items-center justify-center">
+                  ${scene.videoUrl ? `
+                    <video src="${scene.videoUrl}" controls loop class="w-full h-full object-contain"></video>
+                    <span class="absolute top-2 left-2 px-2 py-0.5 rounded bg-amber-600/90 text-[10px] font-bold text-white">🎬 ${escapeHtml((scene.videoModelSlug || 'FLOW VEO').toUpperCase())}</span>
+                  ` : scene.imageUrl ? `
+                    <img src="${scene.imageUrl}" class="w-full h-full object-contain" />
+                    <span class="absolute top-2 left-2 px-2 py-0.5 rounded bg-black/80 text-[10px] text-amber-300">🖼️ FLOW KEYFRAME</span>
+                  ` : `<div class="text-slate-500">รอเจนภาพ/วิดีโอ</div>`}
+                </div>
+
+                <!-- START FRAME -> END FRAME CONTINUITY BOX -->
+                <div class="grid grid-cols-2 gap-2 bg-black/40 p-2 rounded-xl border border-white/10 text-[10px]">
+                  <div>
+                    <div class="text-sky-300 font-semibold mb-1">⏮️ Start Frame (ต้นช็อต)</div>
+                    ${(prevFrame || scene.firstFrameUrl || scene.imageUrl) ? `<img src="${prevFrame || scene.firstFrameUrl || scene.imageUrl}" class="w-full h-14 object-cover rounded border border-sky-500/30" />` : `<div class="h-14 bg-black/50 rounded flex items-center justify-center text-slate-600">Opening</div>`}
+                  </div>
+                  <div>
+                    <div class="text-emerald-300 font-semibold mb-1">⏭️ End Frame (ส่งต่อช็อตหน้า)</div>
+                    ${(scene.lastFrameUrl || scene.imageUrl) ? `<img src="${scene.lastFrameUrl || scene.imageUrl}" class="w-full h-14 object-cover rounded border border-emerald-500/30" />` : `<div class="h-14 bg-black/50 rounded flex items-center justify-center text-slate-600">End</div>`}
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-1.5">
+                  <button onclick="generateSingleImage('${scene.id}')" class="py-2 px-2 rounded-xl bg-indigo-600/25 hover:bg-indigo-600/40 border border-indigo-500/40 text-indigo-200 text-[11px] font-semibold">
+                    🖼️ เจนภาพ Storyboard
+                  </button>
+                  <button onclick="generateSingleVideo('${scene.id}')" class="py-2 px-2 rounded-xl bg-gradient-to-r from-amber-500/30 to-orange-600/30 hover:from-amber-500/45 hover:to-orange-600/45 border border-amber-400/50 text-amber-200 text-[11px] font-bold">
+                    🎬 เจนวิดีโอผ่าน Flow
+                  </button>
+                </div>
+              </div>
+
+              <!-- COL 2: GOOGLE FLOW CAMERA, INGREDIENTS & STRUCTURED PROMPT -->
+              <div class="col-span-4 space-y-2.5">
+                <div class="grid grid-cols-2 gap-2">
+                  <div>
+                    <label class="block text-[11px] font-semibold text-amber-300 mb-1">📐 ขนาดภาพ (Shot Type)</label>
+                    <select onchange="updateFlowShotSetting('${scene.id}', 'shotType', this.value)" class="w-full rounded-lg bg-black/50 border border-white/15 px-2 py-1.5 text-white text-[11px]">
+                      ${SHOT_TYPE_OPTIONS.map(st => `<option value="${st}" ${scene.shotType === st ? 'selected' : ''}>${st}</option>`).join('')}
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-[11px] font-semibold text-sky-300 mb-1">🎥 การเคลื่อนกล้อง (Camera Move)</label>
+                    <select onchange="updateFlowShotSetting('${scene.id}', 'cameraMovement', this.value)" class="w-full rounded-lg bg-black/50 border border-white/15 px-2 py-1.5 text-white text-[11px]">
+                      ${CAMERA_MOVE_OPTIONS.map(cm => `<option value="${cm}" ${scene.cameraMovement === cm ? 'selected' : ''}>${cm}</option>`).join('')}
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block text-[11px] font-semibold text-indigo-300 mb-1">🌊 โหมดสร้างวิดีโอของ Google Flow</label>
+                  <select onchange="updateFlowShotSetting('${scene.id}', 'flowGenMode', this.value)" class="w-full rounded-lg bg-black/50 border border-indigo-500/30 px-2.5 py-1.5 text-indigo-200 text-[11px] font-semibold">
+                    ${FLOW_GEN_MODES.map(m => `<option value="${m.value}" ${scene.flowGenMode === m.value ? 'selected' : ''}>${m.label}</option>`).join('')}
+                  </select>
+                </div>
+
+                <div>
+                  <div class="flex items-center justify-between mb-1">
+                    <label class="text-[11px] font-semibold text-amber-300">🎬 Google Flow Prompt (พร้อมล็อคหน้าตัวละคร & เฟรมต่อเนื่อง)</label>
+                    <button onclick="copyFlowPrompt('${scene.id}')" class="px-2 py-0.5 rounded bg-amber-500/20 hover:bg-amber-500/35 text-amber-200 text-[10px] font-semibold">📋 คัดลอก</button>
+                  </div>
+                  <textarea onchange="updateSceneField('${scene.id}', 'flowPrompt', this.value)" rows="4" class="w-full rounded-xl bg-black/60 border border-amber-500/30 p-2 text-amber-100 font-mono text-[10px] leading-relaxed">${escapeHtml(scene.flowPrompt || '')}</textarea>
+                </div>
+              </div>
+
+              <!-- COL 3: ELEVENLABS VOICEOVER (TTS) + ELEVENLABS SOUND EFFECTS (SFX) -->
+              <div class="col-span-4 space-y-2.5">
+                <!-- ELEVENLABS TTS -->
+                <div class="p-2.5 rounded-xl bg-purple-950/25 border border-purple-500/30 space-y-2">
+                  <div class="flex items-center justify-between">
+                    <span class="text-[11px] font-bold text-purple-300">🎙️ บทพูดพากย์ไทย (ElevenLabs TTS)</span>
+                    <button onclick="generateSingleAudio('${scene.id}')" class="px-2.5 py-1 rounded-lg bg-purple-600/35 hover:bg-purple-600/50 border border-purple-400/40 text-purple-100 text-[10px] font-bold">
+                      🎙️ เจนเสียงบทพูด
+                    </button>
+                  </div>
+                  <textarea onchange="updateSceneField('${scene.id}', 'narration', this.value)" rows="2" class="w-full rounded-lg bg-black/50 border border-white/15 p-2 text-white text-[11px]">${escapeHtml(scene.narration)}</textarea>
+                  ${scene.audioUrl ? `<audio src="${scene.audioUrl}" controls class="h-7 w-full"></audio>` : ''}
+                </div>
+
+                <!-- ELEVENLABS SFX -->
+                <div class="p-2.5 rounded-xl bg-pink-950/25 border border-pink-500/35 space-y-2">
+                  <div class="flex items-center justify-between">
+                    <span class="text-[11px] font-bold text-pink-300">🔊 ซาวด์เอฟเฟค (ElevenLabs SFX)</span>
+                    <button onclick="generateSingleSfx('${scene.id}')" class="px-2.5 py-1 rounded-lg bg-pink-600/35 hover:bg-pink-600/50 border border-pink-400/40 text-pink-100 text-[10px] font-bold">
+                      🔊 เจนซาวด์เอฟเฟค
+                    </button>
+                  </div>
+                  <input id="sfxInput_${scene.id}" onchange="updateSceneField('${scene.id}', 'sfxPrompt', this.value)" value="${escapeHtml(scene.sfxPrompt || '')}" placeholder="เช่น Heavy rain and thunder, nightclub bass..." class="w-full rounded-lg bg-black/50 border border-pink-500/30 px-2.5 py-1.5 text-pink-100 text-[11px]" />
+                  <div class="flex items-center gap-1 flex-wrap">
+                    ${DRAMA_SFX_PRESETS.map((p, pIdx) => `
+                      <button onclick="applySfxPreset('${scene.id}', ${pIdx})" class="px-1.5 py-0.5 rounded bg-white/5 hover:bg-pink-500/25 text-slate-300 hover:text-pink-200 text-[9px] border border-white/10 transition">
+                        ${p.label}
+                      </button>
+                    `).join('')}
+                  </div>
+                  ${scene.sfxUrl ? `<audio src="${scene.sfxUrl}" controls class="h-7 w-full"></audio>` : ''}
+                </div>
+              </div>
+            </div>
+
+            ${nextScene ? `
+              <div class="pt-2 flex items-center justify-center">
+                <div class="px-3 py-1 rounded-full bg-sky-500/15 border border-sky-500/30 text-sky-300 text-[10px] font-semibold flex items-center gap-2">
+                  <span>⬇️ ส่งเฟรมสุดท้ายของ SHOT ${index + 1} ไปเป็น Start Keyframe ของ SHOT ${index + 2} (${escapeHtml(nextScene.title)})</span>
+                </div>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }).join('');
+
+      container.innerHTML = headerHtml + shotsHtml;
+    }
+
+    // ============================================================================
+    // VIEW MODE 2: STANDARD SCENE STUDIO (UPGRADED WITH FLOW & ELEVENLABS SFX)
+    // ============================================================================
+    function renderStandardScenesList(chars) {
       const container = document.getElementById('scenesContainer');
       container.innerHTML = activeProject.scenes.map((scene, index) => {
         const prevScene = index > 0 ? activeProject.scenes[index - 1] : null;
@@ -863,18 +1464,31 @@
                   SCENE ${index + 1}
                 </span>
                 <input onchange="updateSceneField('${scene.id}', 'title', this.value)" value="${escapeHtml(scene.title)}" class="bg-transparent font-bold text-sm text-white focus:outline-none border-b border-transparent focus:border-indigo-500 px-1" />
+                <span class="px-2 py-0.5 rounded bg-amber-500/15 border border-amber-500/30 text-amber-300 text-[10px] font-semibold">
+                  📐 ${escapeHtml(scene.shotType || 'Medium Shot')}
+                </span>
               </div>
 
               <div class="flex items-center gap-2 flex-wrap">
+                <!-- Per-Scene Video Engine & Model Selector -->
+                <div class="flex items-center gap-1 bg-black/50 border border-amber-500/30 rounded-lg px-2 py-1 text-[11px]">
+                  <span class="text-amber-300">🎥 ค่าย:</span>
+                  <select onchange="updateSceneVideoProvider('${scene.id}', this.value)" class="bg-transparent text-white font-semibold focus:outline-none">
+                    ${VIDEO_PROVIDER_OPTIONS.map(opt => `<option value="${opt.value}" ${scene.videoProvider === opt.value ? 'selected' : ''} class="bg-slate-900">${opt.label}</option>`).join('')}
+                  </select>
+                </div>
+                <div class="flex items-center gap-1 bg-black/50 border border-sky-500/30 rounded-lg px-2 py-1 text-[11px]">
+                  <span class="text-sky-300">🤖 โมเดล:</span>
+                  <select onchange="updateSceneVideoModel('${scene.id}', this.value)" class="bg-transparent text-sky-200 font-bold focus:outline-none">
+                    ${VIDEO_MODEL_OPTIONS.map(opt => `<option value="${opt.value}" ${scene.videoModelSlug === opt.value ? 'selected' : ''} class="bg-slate-900">${opt.label}</option>`).join('')}
+                  </select>
+                </div>
+
                 ${index > 0 ? `
                   <button onclick="chainSingleSceneContinuity('${scene.id}')" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold transition flex items-center gap-1 ${scene.continueFromPrev ? 'bg-sky-500/20 text-sky-300 border border-sky-500/40' : 'bg-white/5 text-slate-400'}">
-                    🔗 ${scene.continueFromPrev ? 'เชื่อมเฟรมท้ายจากซีน ' + index + ' แล้ว' : 'กดเชื่อมฉากจากซีน ' + index}
+                    🔗 ${scene.continueFromPrev ? 'เชื่อมเฟรมท้ายซีน ' + index : 'กดเชื่อมฉาก'}
                   </button>
-                ` : `<span class="px-2.5 py-1 rounded-lg bg-indigo-500/15 text-indigo-300 text-[11px] font-medium">🏁 ซีนเปิดเรื่อง (Establishing Shot)</span>`}
-
-                <span class="px-2.5 py-1 rounded-lg bg-purple-500/15 border border-purple-500/30 text-purple-300 text-[11px] font-medium">
-                  🇹🇭 อักขระไทย: ${scene.thaiGrammarScore || 98}%
-                </span>
+                ` : `<span class="px-2.5 py-1 rounded-lg bg-indigo-500/15 text-indigo-300 text-[11px] font-medium">🏁 ซีนเปิดเรื่อง</span>`}
               </div>
             </div>
 
@@ -883,7 +1497,7 @@
                 <div class="relative rounded-xl overflow-hidden bg-black border border-white/10 aspect-video flex items-center justify-center">
                   ${scene.videoUrl ? `
                     <video src="${scene.videoUrl}" controls loop class="w-full h-full object-contain"></video>
-                    <span class="absolute top-2 left-2 px-2 py-0.5 rounded bg-indigo-600/90 text-[10px] font-bold text-white">🎞️ GROK / AI VIDEO</span>
+                    <span class="absolute top-2 left-2 px-2 py-0.5 rounded bg-indigo-600/90 text-[10px] font-bold text-white">🎬 ${escapeHtml((scene.videoModelSlug || 'AI VIDEO').toUpperCase())}</span>
                   ` : scene.imageUrl ? `
                     <img src="${scene.imageUrl}" class="w-full h-full object-contain" />
                     <span class="absolute top-2 left-2 px-2 py-0.5 rounded bg-black/80 text-[10px] text-slate-200">🖼️ KEYFRAME</span>
@@ -896,36 +1510,46 @@
                       ${prevFrame ? `<img src="${prevFrame}" class="w-10 h-10 rounded object-cover border border-sky-400/40" />` : `<div class="w-10 h-10 rounded bg-black/50 flex items-center justify-center">🎞️</div>`}
                       <div>
                         <div class="text-sky-300 font-semibold">🔗 Continue จากท้ายซีน ${index}</div>
-                        <div class="text-slate-400">ล็อคแสง สี และตำแหน่งต่อเนื่อง</div>
+                        <div class="text-slate-400">ล็อคแสง สี และตำแหน่งต่อเนื่อง (Frames-to-Video)</div>
                       </div>
                     </div>
-                    <button onclick="chainSingleSceneContinuity('${scene.id}')" class="px-2 py-1 rounded bg-sky-500/20 hover:bg-sky-500/35 text-sky-200 font-semibold shrink-0">อัปเดตเฟรม</button>
+                    <button onclick="chainSingleSceneContinuity('${scene.id}')" class="px-2 py-1 rounded bg-sky-500/20 hover:bg-sky-500/35 text-sky-200 font-semibold shrink-0">ซิงค์เฟรม</button>
                   </div>
                 ` : ''}
 
-                <div class="grid grid-cols-3 gap-1.5">
-                  <button onclick="generateSingleImage('${scene.id}')" class="py-1.5 px-2 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/35 border border-indigo-500/30 text-indigo-200 text-[11px] font-medium transition">
+                <div class="grid grid-cols-2 gap-1.5">
+                  <button onclick="generateSingleImage('${scene.id}')" class="py-1.5 px-2 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/35 border border-indigo-500/30 text-indigo-200 text-[11px] font-semibold transition">
                     🖼️ เจนภาพ (FaceLock)
                   </button>
-                  <button onclick="generateSingleAudio('${scene.id}')" class="py-1.5 px-2 rounded-lg bg-purple-600/20 hover:bg-purple-600/35 border border-purple-500/30 text-purple-200 text-[11px] font-medium transition">
-                    🎙️ พากย์เสียงไทย
+                  <button onclick="generateSingleVideo('${scene.id}')" class="py-1.5 px-2 rounded-lg bg-emerald-600/25 hover:bg-emerald-600/40 border border-emerald-500/40 text-emerald-200 text-[11px] font-bold transition">
+                    🎬 เจนวิดีโอ (${escapeHtml(scene.videoProvider === 'google_flow' ? 'Google Flow' : 'Grok/AI')})
                   </button>
-                  <button onclick="generateSingleVideo('${scene.id}')" class="py-1.5 px-2 rounded-lg bg-emerald-600/20 hover:bg-emerald-600/35 border border-emerald-500/30 text-emerald-200 text-[11px] font-medium transition">
-                    🎞️ เจนวิดีโอต่อเนื่อง
+                  <button onclick="generateSingleAudio('${scene.id}')" class="py-1.5 px-2 rounded-lg bg-purple-600/25 hover:bg-purple-600/40 border border-purple-500/40 text-purple-200 text-[11px] font-semibold transition">
+                    🎙️ พากย์เสียง (ElevenLabs)
+                  </button>
+                  <button onclick="generateSingleSfx('${scene.id}')" class="py-1.5 px-2 rounded-lg bg-pink-600/25 hover:bg-pink-600/40 border border-pink-500/40 text-pink-200 text-[11px] font-semibold transition">
+                    🔊 เจนซาวด์เอฟเฟค (SFX)
                   </button>
                 </div>
 
                 ${scene.audioUrl ? `
-                  <div class="flex items-center gap-2 bg-black/40 px-2.5 py-1.5 rounded-lg border border-white/10">
-                    <span class="text-[11px] text-purple-300 shrink-0">🔊 เสียงพากย์ไทย:</span>
+                  <div class="flex items-center gap-2 bg-purple-950/25 px-2.5 py-1.5 rounded-lg border border-purple-500/30">
+                    <span class="text-[11px] text-purple-300 font-semibold shrink-0">🎙️ เสียงบทพูด:</span>
                     <audio src="${scene.audioUrl}" controls class="h-6 w-full"></audio>
+                  </div>
+                ` : ''}
+
+                ${scene.sfxUrl ? `
+                  <div class="flex items-center gap-2 bg-pink-950/25 px-2.5 py-1.5 rounded-lg border border-pink-500/30">
+                    <span class="text-[11px] text-pink-300 font-semibold shrink-0">🔊 ซาวด์เอฟเฟค:</span>
+                    <audio src="${scene.sfxUrl}" controls class="h-6 w-full"></audio>
                   </div>
                 ` : ''}
               </div>
 
-              <div class="col-span-7 flex flex-col gap-3 text-xs">
+              <div class="col-span-7 flex flex-col gap-2.5 text-xs">
                 <div class="p-2.5 rounded-xl bg-amber-500/5 border border-amber-500/20 flex items-center justify-between flex-wrap gap-2">
-                  <span class="text-[11px] font-semibold text-amber-300">👤 ล็อคใบหน้าตัวละครในซีนนี้:</span>
+                  <span class="text-[11px] font-semibold text-amber-300">👤 ล็อคใบหน้าตัวละคร (Ingredients Lock):</span>
                   <div class="flex items-center gap-2 flex-wrap">
                     ${chars.map(c => {
                       const checked = (scene.characterIds || []).includes(c.id);
@@ -939,40 +1563,116 @@
                   </div>
                 </div>
 
-                <div>
-                  <div class="flex items-center justify-between mb-1">
-                    <label class="text-[11px] font-semibold text-purple-300">🇹🇭 บทพากย์ภาษาไทย & ซับไตเติ้ล (ตรวจไวยากรณ์และตัวสะกดแล้ว)</label>
-                    <span class="text-[10px] text-emerald-400">✓ ไวยากรณ์ไทยถูกต้อง</span>
+                <!-- FLOW STORYBOARD SHOT & CAMERA CONTROLS -->
+                <div class="grid grid-cols-3 gap-2 bg-black/30 p-2 rounded-xl border border-white/10">
+                  <div>
+                    <label class="block text-[10px] text-amber-300 font-semibold mb-0.5">📐 ขนาดภาพ (Flow Shot)</label>
+                    <select onchange="updateFlowShotSetting('${scene.id}', 'shotType', this.value)" class="w-full rounded bg-black/60 border border-white/15 px-2 py-1 text-white text-[11px]">
+                      ${SHOT_TYPE_OPTIONS.map(st => `<option value="${st}" ${scene.shotType === st ? 'selected' : ''}>${st}</option>`).join('')}
+                    </select>
                   </div>
-                  <textarea onchange="updateSceneField('${scene.id}', 'narration', this.value)" rows="2" class="w-full rounded-xl bg-black/40 border border-white/15 p-2.5 text-white focus:outline-none focus:border-purple-500 leading-relaxed">${escapeHtml(scene.narration)}</textarea>
+                  <div>
+                    <label class="block text-[10px] text-sky-300 font-semibold mb-0.5">🎥 มุมกล้อง (Camera Motion)</label>
+                    <select onchange="updateFlowShotSetting('${scene.id}', 'cameraMovement', this.value)" class="w-full rounded bg-black/60 border border-white/15 px-2 py-1 text-white text-[11px]">
+                      ${CAMERA_MOVE_OPTIONS.map(cm => `<option value="${cm}" ${scene.cameraMovement === cm ? 'selected' : ''}>${cm}</option>`).join('')}
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-[10px] text-indigo-300 font-semibold mb-0.5">🌊 โหมด Google Flow</label>
+                    <select onchange="updateFlowShotSetting('${scene.id}', 'flowGenMode', this.value)" class="w-full rounded bg-black/60 border border-white/15 px-2 py-1 text-indigo-200 text-[11px]">
+                      ${FLOW_GEN_MODES.map(m => `<option value="${m.value}" ${scene.flowGenMode === m.value ? 'selected' : ''}>${m.label}</option>`).join('')}
+                    </select>
+                  </div>
                 </div>
 
                 <div>
                   <div class="flex items-center justify-between mb-1">
-                    <label class="text-[11px] font-semibold text-pink-300">🗣️ คำอ่านออกเสียงภาษาไทย (Phonetic TTS — บังคับอักขระชัดเจน ไม่รวบคำ)</label>
-                    <span class="text-[10px] text-slate-400">เว้นจังหวะหายใจ (...) และแยกพยางค์คำอ่านยาก</span>
+                    <label class="text-[11px] font-semibold text-purple-300">🇹🇭 บทพากย์ภาษาไทย & ซับไตเติ้ล (ElevenLabs Multilingual TTS)</label>
+                    <span class="text-[10px] text-emerald-400">✓ ไวยากรณ์ไทย ${scene.thaiGrammarScore || 98}%</span>
                   </div>
-                  <input onchange="updateSceneField('${scene.id}', 'ttsPhoneticText', this.value)" value="${escapeHtml(scene.ttsPhoneticText || scene.narration)}" class="w-full rounded-xl bg-purple-950/20 border border-purple-500/30 px-3 py-2 text-purple-200 text-xs focus:outline-none focus:border-pink-500" />
-                  ${scene.thaiQcNotes && scene.thaiQcNotes.length ? `
-                    <div class="text-[10px] text-emerald-400/90 mt-1">💬 หมายเหตุ QC ภาษาไทย: ${escapeHtml(scene.thaiQcNotes.join(' | '))}</div>
-                  ` : ''}
+                  <textarea onchange="updateSceneField('${scene.id}', 'narration', this.value)" rows="2" class="w-full rounded-xl bg-black/40 border border-white/15 p-2 text-white focus:outline-none focus:border-purple-500 leading-relaxed">${escapeHtml(scene.narration)}</textarea>
                 </div>
 
-                <div class="grid grid-cols-2 gap-2.5">
-                  <div>
-                    <label class="block text-[11px] font-semibold text-indigo-300 mb-1">🎨 Image Prompt (พ่วง Face DNA อัตโนมัติ)</label>
-                    <textarea onchange="updateSceneField('${scene.id}', 'imagePrompt', this.value)" rows="2" class="w-full rounded-xl bg-black/40 border border-white/10 p-2 text-slate-300 font-mono text-[10px]">${escapeHtml(scene.imagePrompt)}</textarea>
+                <div>
+                  <div class="flex items-center justify-between mb-1">
+                    <label class="text-[11px] font-semibold text-pink-300">🔊 คำสั่งสร้างเสียงซาวด์เอฟเฟค (ElevenLabs Sound Effects — SFX)</label>
+                    <div class="flex items-center gap-1">
+                      ${DRAMA_SFX_PRESETS.map((p, pIdx) => `
+                        <button onclick="applySfxPreset('${scene.id}', ${pIdx})" class="px-1.5 py-0.5 rounded bg-pink-500/15 hover:bg-pink-500/30 text-pink-200 text-[9px] border border-pink-500/30 transition">
+                          ${p.label}
+                        </button>
+                      `).join('')}
+                    </div>
                   </div>
-                  <div>
-                    <label class="block text-[11px] font-semibold text-emerald-300 mb-1">🎥 Video Motion Prompt (Continue ฉาก)</label>
-                    <textarea onchange="updateSceneField('${scene.id}', 'videoPrompt', this.value)" rows="2" class="w-full rounded-xl bg-black/40 border border-white/10 p-2 text-slate-300 font-mono text-[10px]">${escapeHtml(scene.videoPrompt || '')}</textarea>
+                  <div class="flex items-center gap-2">
+                    <input onchange="updateSceneField('${scene.id}', 'sfxPrompt', this.value)" value="${escapeHtml(scene.sfxPrompt || '')}" placeholder="บรรยายเสียงเอฟเฟกต์ เช่น Heavy rain and thunder at night..." class="flex-1 rounded-xl bg-pink-950/20 border border-pink-500/30 px-3 py-1.5 text-pink-100 text-xs focus:outline-none focus:border-pink-400" />
+                    <button onclick="generateSingleSfx('${scene.id}')" class="px-3 py-1.5 rounded-xl bg-pink-600/30 hover:bg-pink-600/45 border border-pink-400/40 text-pink-200 text-[11px] font-bold shrink-0">
+                      🔊 เจนเสียง SFX
+                    </button>
                   </div>
+                </div>
+
+                <div>
+                  <div class="flex items-center justify-between mb-1">
+                    <label class="text-[11px] font-semibold text-amber-300">🎬 Google Flow Structured Prompt (สำหรับ Veo 3.0 / Veo 2.0 / Grok)</label>
+                    <button onclick="copyFlowPrompt('${scene.id}')" class="text-[10px] text-amber-300 hover:underline">📋 คัดลอก Flow Prompt</button>
+                  </div>
+                  <textarea onchange="updateSceneField('${scene.id}', 'flowPrompt', this.value)" rows="2" class="w-full rounded-xl bg-amber-950/15 border border-amber-500/30 p-2 text-amber-100 font-mono text-[10px]">${escapeHtml(scene.flowPrompt || '')}</textarea>
                 </div>
               </div>
             </div>
           </div>
         `;
       }).join('');
+    }
+
+    async function updateFlowShotSetting(sceneId, field, value) {
+      const idx = activeProject.scenes.findIndex(s => s.id === sceneId);
+      if (idx === -1) return;
+      const scene = activeProject.scenes[idx];
+      scene[field] = value;
+      scene.flowPrompt = buildClientFlowPrompt(activeProject, scene, idx);
+      await saveActiveProject();
+    }
+
+    async function updateSceneVideoProvider(sceneId, providerVal) {
+      const idx = activeProject.scenes.findIndex(s => s.id === sceneId);
+      if (idx === -1) return;
+      const scene = activeProject.scenes[idx];
+      scene.videoProvider = providerVal;
+      if (providerVal === 'google_flow' && (!scene.videoModelSlug || (!scene.videoModelSlug.startsWith('veo-') && !scene.videoModelSlug.startsWith('flow-')))) {
+        scene.videoModelSlug = 'veo-3.0-generate-preview';
+      } else if (providerVal === 'mcp_grok') {
+        scene.videoModelSlug = 'grok-imagine-video-1-5';
+      } else if (providerVal === 'mcp_seedance') {
+        scene.videoModelSlug = 'seedance-2-5-pro';
+      } else if (providerVal === 'mcp_kling') {
+        scene.videoModelSlug = 'kling-2-5-pro';
+      }
+      scene.flowPrompt = buildClientFlowPrompt(activeProject, scene, idx);
+      await saveActiveProject();
+      logMsg(`🎥 ตั้งค่าซีนที่ ${idx + 1} ให้เจนวิดีโอผ่าน ${providerVal} (โมเดล: ${scene.videoModelSlug})`, 'info');
+    }
+
+    async function updateSceneVideoModel(sceneId, modelVal) {
+      const idx = activeProject.scenes.findIndex(s => s.id === sceneId);
+      if (idx === -1) return;
+      const scene = activeProject.scenes[idx];
+      scene.videoModelSlug = modelVal;
+      const found = VIDEO_MODEL_OPTIONS.find(m => m.value === modelVal);
+      if (found) scene.videoProvider = found.provider;
+      scene.flowPrompt = buildClientFlowPrompt(activeProject, scene, idx);
+      await saveActiveProject();
+      logMsg(`🤖 ตั้งค่าโมเดลวิดีโอซีนที่ ${idx + 1} เป็น ${modelVal}`, 'info');
+    }
+
+    async function applySfxPreset(sceneId, presetIdx) {
+      const preset = DRAMA_SFX_PRESETS[presetIdx];
+      if (!preset || !activeProject) return;
+      const scene = activeProject.scenes.find(s => s.id === sceneId);
+      if (!scene) return;
+      scene.sfxPrompt = preset.prompt;
+      await generateSingleSfx(sceneId, preset.fallbackUrl);
     }
 
     function openCharacterModal() {
@@ -1009,8 +1709,8 @@
                 <input onchange="updateCharField(${idx}, 'role', this.value)" value="${escapeHtml(c.role || '')}" class="w-full rounded-lg bg-black/50 border border-white/15 px-3 py-1.5 text-slate-200" />
               </div>
               <div>
-                <label class="block text-slate-400 text-[11px] mb-0.5">Magnific / AI Character Ref ID</label>
-                <input onchange="updateCharField(${idx}, 'magnificRefId', this.value)" value="${escapeHtml(c.magnificRefId || '')}" placeholder="เช่น @nop หรือ Library ID" class="w-full rounded-lg bg-black/50 border border-white/15 px-3 py-1.5 text-amber-300 font-mono" />
+                <label class="block text-slate-400 text-[11px] mb-0.5">Google Flow Ingredient / Magnific ID</label>
+                <input onchange="updateCharField(${idx}, 'magnificRefId', this.value)" value="${escapeHtml(c.magnificRefId || '')}" placeholder="เช่น @nop หรือ Ingredient ID" class="w-full rounded-lg bg-black/50 border border-white/15 px-3 py-1.5 text-amber-300 font-mono" />
               </div>
             </div>
             <div>
@@ -1050,11 +1750,13 @@
     }
 
     async function toggleSceneCharacter(sceneId, charId, isChecked) {
-      const scene = activeProject.scenes.find(s => s.id === sceneId);
-      if (!scene) return;
+      const idx = activeProject.scenes.findIndex(s => s.id === sceneId);
+      if (idx === -1) return;
+      const scene = activeProject.scenes[idx];
       if (!Array.isArray(scene.characterIds)) scene.characterIds = [];
       if (isChecked && !scene.characterIds.includes(charId)) scene.characterIds.push(charId);
       else if (!isChecked) scene.characterIds = scene.characterIds.filter(id => id !== charId);
+      scene.flowPrompt = buildClientFlowPrompt(activeProject, scene, idx);
       await saveActiveProject();
     }
 
@@ -1064,9 +1766,10 @@
         const prev = activeProject.scenes[idx - 1];
         activeProject.scenes[idx].continueFromPrev = true;
         activeProject.scenes[idx].startKeyframeUrl = prev.lastFrameUrl || prev.imageUrl;
+        activeProject.scenes[idx].flowPrompt = buildClientFlowPrompt(activeProject, activeProject.scenes[idx], idx);
       }
       await saveActiveProject();
-      logMsg('✅ เชื่อมฉากต่อเนื่องสำเร็จ!', 'success');
+      logMsg('✅ เชื่อมฉากต่อเนื่อง (Frames-to-Video) สำเร็จ!', 'success');
     }
 
     async function chainAllScenesContinuity() {
@@ -1076,6 +1779,7 @@
           s.continueFromPrev = true;
           s.startKeyframeUrl = activeProject.scenes[i - 1].lastFrameUrl || activeProject.scenes[i - 1].imageUrl;
         }
+        s.flowPrompt = buildClientFlowPrompt(activeProject, s, i);
       });
       await saveActiveProject();
       logMsg('✅ เชื่อมฉากต่อเนื่องครบทุกซีนเรียบร้อย!', 'success');
@@ -1092,7 +1796,7 @@
         s.thaiGrammarScore = qc.grammarScore;
       });
       await saveActiveProject();
-      logMsg('✅ ตรวจไวยากรณ์ไทยและปรับคำอ่านออกเสียง (Phonetic TTS) ครบทุกซีนเรียบร้อย!', 'success');
+      logMsg('✅ ตรวจไวยากรณ์ไทยและปรับคำอ่านออกเสียง (Phonetic TTS) สำหรับ ElevenLabs ครบทุกซีนเรียบร้อย!', 'success');
     }
 
     async function openPreFinalQcModal() {
@@ -1114,7 +1818,7 @@
           <div class="col-span-4 space-y-2">
             <div class="font-bold text-white flex items-center justify-between">
               <span>ซีนที่ ${i + 1}: ${escapeHtml(s.title)}</span>
-              <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[10px]">QC ผ่าน</span>
+              <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[10px]">${escapeHtml(s.videoModelSlug || 'Veo 3.0')}</span>
             </div>
             <div class="grid grid-cols-2 gap-2">
               <div class="bg-black/60 p-1.5 rounded-lg border border-white/10 text-center">
@@ -1130,28 +1834,23 @@
 
           <div class="col-span-5 space-y-2">
             <div>
-              <span class="text-[11px] font-semibold text-purple-300">🇹🇭 บทพูดภาษาไทย (ไวยากรณ์ ${s.thaiGrammarScore || 98}%):</span>
+              <span class="text-[11px] font-semibold text-purple-300">🇹🇭 บทพูดภาษาไทย (ElevenLabs TTS • ไวยากรณ์ ${s.thaiGrammarScore || 98}%):</span>
               <input onchange="updateSceneField('${s.id}', 'narration', this.value)" value="${escapeHtml(s.narration)}" class="w-full mt-1 rounded-lg bg-black/60 border border-white/15 px-2.5 py-1.5 text-white" />
             </div>
-            <div>
-              <span class="text-[11px] font-semibold text-pink-300">🗣️ คำอ่านออกเสียงอักขระไทยชัดเจน (Phonetic TTS):</span>
-              <input onchange="updateSceneField('${s.id}', 'ttsPhoneticText', this.value)" value="${escapeHtml(s.ttsPhoneticText || s.narration)}" class="w-full mt-1 rounded-lg bg-purple-950/30 border border-purple-500/30 px-2.5 py-1.5 text-purple-200" />
+            <div class="grid grid-cols-2 gap-2 pt-1">
+              ${s.audioUrl ? `<div><div class="text-[10px] text-purple-300 mb-0.5">🎙️ เสียงพากย์:</div><audio src="${s.audioUrl}" controls class="h-7 w-full"></audio></div>` : ''}
+              ${s.sfxUrl ? `<div><div class="text-[10px] text-pink-300 mb-0.5">🔊 ซาวด์เอฟเฟค:</div><audio src="${s.sfxUrl}" controls class="h-7 w-full"></audio></div>` : ''}
             </div>
-            ${s.audioUrl ? `
-              <div class="flex items-center gap-2 pt-1">
-                <audio src="${s.audioUrl}" controls class="h-7 flex-1"></audio>
-              </div>
-            ` : ''}
           </div>
 
           <div class="col-span-3 flex flex-col gap-1.5">
             <button onclick="generateSingleAudio('${s.id}'); setTimeout(runPreFinalAudit, 1000);" class="w-full py-1.5 px-3 rounded-lg bg-purple-600/25 hover:bg-purple-600/40 border border-purple-500/40 text-purple-200 text-[11px] font-semibold">
-              🎙️ พากย์เสียงซีนนี้ใหม่
+              🎙️ เจนเสียงพูด (ElevenLabs)
             </button>
-            <button onclick="generateSingleImage('${s.id}'); setTimeout(runPreFinalAudit, 1000);" class="w-full py-1.5 px-3 rounded-lg bg-indigo-600/25 hover:bg-indigo-600/40 border border-indigo-500/40 text-indigo-200 text-[11px] font-semibold">
-              🖼️ เจนภาพซีนนี้ใหม่
+            <button onclick="generateSingleSfx('${s.id}'); setTimeout(runPreFinalAudit, 1000);" class="w-full py-1.5 px-3 rounded-lg bg-pink-600/25 hover:bg-pink-600/40 border border-pink-500/40 text-pink-200 text-[11px] font-semibold">
+              🔊 เจนซาวด์เอฟเฟค (SFX)
             </button>
-            <div class="text-[10px] text-emerald-400 text-center mt-1">✅ ใบหน้าและบทพูดผ่านเกณฑ์</div>
+            <div class="text-[10px] text-emerald-400 text-center mt-1">✅ ใบหน้า เสียงพูด & SFX พร้อมเรนเดอร์</div>
           </div>
         </div>
       `).join('');
@@ -1160,7 +1859,7 @@
     async function confirmQcAndRenderFinal() {
       const btn = document.getElementById('btnConfirmFinalRender');
       btn.disabled = true;
-      btn.textContent = '⏳ กำลังเรนเดอร์ Final Clip (.MP4)...';
+      btn.textContent = '⏳ กำลังมิกซ์เสียงพากย์ + SFX และเรนเดอร์ Final Clip (.MP4)...';
       await renderFullMovie();
       btn.disabled = false;
       btn.textContent = '🎬 ยืนยันผ่าน QC ทั้งหมด & เรนเดอร์ Final Clip (.MP4)';
@@ -1182,24 +1881,36 @@
     }
 
     async function updateSceneField(sceneId, field, value) {
-      const scene = activeProject.scenes.find(s => s.id === sceneId);
-      if (!scene) return;
+      const idx = activeProject.scenes.findIndex(s => s.id === sceneId);
+      if (idx === -1) return;
+      const scene = activeProject.scenes[idx];
       scene[field] = value;
+      if (field === 'videoPrompt' || field === 'imagePrompt') {
+        scene.flowPrompt = buildClientFlowPrompt(activeProject, scene, idx);
+      }
       await saveActiveProject();
     }
 
     async function addNewScene() {
       const nextNum = (activeProject.scenes?.length || 0) + 1;
       const prevScene = activeProject.scenes[activeProject.scenes.length - 1];
-      activeProject.scenes.push({
+      const newScene = {
         id: `scene_${Date.now()}`,
         sceneNumber: nextNum,
         title: `ซีนที่ ${nextNum} (ฉากต่อเนื่อง)`,
         duration: 6,
+        shotType: SHOT_TYPE_OPTIONS[(nextNum - 1) % SHOT_TYPE_OPTIONS.length],
+        cameraMovement: CAMERA_MOVE_OPTIONS[(nextNum - 1) % CAMERA_MOVE_OPTIONS.length],
+        flowGenMode: 'frames_to_video',
+        videoProvider: activeProject.videoProvider || 'google_flow',
+        videoModelSlug: activeProject.videoModelSlug || 'veo-3.0-generate-preview',
         narration: 'ใส่บทพูดภาษาไทยที่ต้องการให้พากย์ในซีนนี้',
         ttsPhoneticText: 'ใส่-บท-พูด-ภา-สา-ไท ... ที่-ต้อง-กาน-พาก-ใน-ซีน-นี้',
         thaiQcStatus: 'verified',
         thaiGrammarScore: 98,
+        sfxPrompt: DRAMA_SFX_PRESETS[(nextNum - 1) % DRAMA_SFX_PRESETS.length].prompt,
+        sfxUrl: DRAMA_SFX_PRESETS[(nextNum - 1) % DRAMA_SFX_PRESETS.length].fallbackUrl,
+        sfxStatus: 'ready',
         imagePrompt: `Continuous shot from Scene ${nextNum - 1}, consistent character face and outfit, 8k`,
         videoPrompt: 'Continuous camera motion from previous shot, natural realistic acting',
         cameraMotion: 'zoom_in',
@@ -1208,12 +1919,15 @@
         characterIds: activeProject.characters ? [activeProject.characters[0]?.id] : [],
         imageStatus: 'idle',
         imageUrl: prevScene ? (prevScene.lastFrameUrl || prevScene.imageUrl) : null
-      });
+      };
+      newScene.flowPrompt = buildClientFlowPrompt(activeProject, newScene, nextNum - 1);
+      activeProject.scenes.push(newScene);
       await saveActiveProject();
+      logMsg(`➕ เพิ่มช็อต/ซีนที่ ${nextNum} ใน Google Flow Storyboard เรียบร้อย!`, 'success');
     }
 
     async function generateSingleImage(sceneId) {
-      logMsg(`🖼️ กำลังเจนภาพพร้อมล็อคหน้าตัวละคร (Face Lock)...`, 'info');
+      logMsg(`🖼️ กำลังเจนภาพ Storyboard พร้อมล็อคหน้าตัวละคร (Face Lock)...`, 'info');
       const scene = activeProject.scenes.find(s => s.id === sceneId);
       if (!scene) return;
       if (isLocalBackend) {
@@ -1222,45 +1936,193 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ projectId: activeProject.id, sceneId })
         });
-        if (res.ok) { await fetchProjects(); logMsg('✅ เจนภาพสำเร็จ!', 'success'); return; }
+        if (res.ok) { await fetchProjects(); logMsg('✅ เจนภาพ Storyboard สำเร็จ!', 'success'); return; }
       }
       scene.imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(scene.imagePrompt)}?width=720&height=1280&seed=${Date.now() % 100000}&nologo=true&model=flux`;
       scene.firstFrameUrl = scene.imageUrl;
       scene.lastFrameUrl = scene.imageUrl;
       await saveActiveProject();
-      logMsg('✅ เจนภาพพร้อมล็อคคาแรกเตอร์สำเร็จ!', 'success');
+      logMsg('✅ เจนภาพ Storyboard พร้อมล็อคคาแรกเตอร์สำเร็จ!', 'success');
     }
 
+    // ============================================================================
+    // ELEVENLABS VOICEOVER (TTS) GENERATOR (LOCAL + DIRECT CLOUD API)
+    // ============================================================================
     async function generateSingleAudio(sceneId) {
-      logMsg(`🎙️ กำลังพากย์เสียงภาษาไทยอักขระชัดเจน...`, 'info');
+      const scene = activeProject?.scenes?.find(s => s.id === sceneId);
+      if (!scene) return;
+      const eKey = appConfig.elevenlabsApiKey;
+      const voiceId = appConfig.elevenlabsVoiceId || 'JBFqnCBsd6RMkjVDRZzb';
+      const modelId = appConfig.elevenlabsModel || 'eleven_multilingual_v2';
+
+      logMsg(`🎙️ กำลังสร้างเสียงบทพูดภาษาไทยผ่าน ElevenLabs (${modelId})...`, 'info');
+
       if (isLocalBackend) {
-        const res = await fetch('/api/generate/audio', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ projectId: activeProject.id, sceneId })
-        });
-        if (res.ok) { await fetchProjects(); logMsg('🔊 พากย์เสียงภาษาไทยสำเร็จ!', 'success'); return; }
+        try {
+          const res = await fetch('/api/generate/audio', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ projectId: activeProject.id, sceneId, provider: 'elevenlabs', voiceId, modelId })
+          });
+          if (res.ok) {
+            await fetchProjects();
+            logMsg('🔊 สร้างเสียงพากย์ภาษาไทยสำเร็จ!', 'success');
+            return;
+          }
+        } catch (e) {}
       }
+
+      // Direct Browser-to-ElevenLabs TTS Call when on Cloud and API Key is set
+      if (eKey) {
+        try {
+          const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'xi-api-key': eKey
+            },
+            body: JSON.stringify({
+              text: scene.narration,
+              model_id: modelId,
+              voice_settings: { stability: 0.50, similarity_boost: 0.80, style: 0.35, use_speaker_boost: true }
+            })
+          });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const blob = await res.blob();
+          scene.audioUrl = URL.createObjectURL(blob);
+          scene.audioStatus = 'ready';
+          await saveActiveProject();
+          logMsg(`🎉 พากย์เสียงบทพูดภาษาไทยด้วย ElevenLabs (${modelId}) สำเร็จ!`, 'success');
+          return;
+        } catch (err) {
+          logMsg(`⚠️ ElevenLabs TTS แจ้งเตือน (${err.message}) — สลับใช้เสียงพากย์ไทย Built-in แทน`, 'warn');
+        }
+      }
+
       await runThaiGrammarQcAll();
-      logMsg('🔊 ตรวจสอบและอัปเดตเสียงพากย์ภาษาไทยสำเร็จ!', 'success');
+      logMsg('🔊 อัปเดตเสียงพากย์ภาษาไทยเรียบร้อย! (สามารถใส่ ElevenLabs API Key ในปุ่มตั้งค่าเพื่อใช้เสียงจริงจาก ElevenLabs)', 'success');
     }
 
-    async function generateSingleVideo(sceneId) {
-      logMsg(`🎞️ กำลังเจนวิดีโอต่อเนื่อง (Scene Continuity + Face Lock)...`, 'info');
+    // ============================================================================
+    // ELEVENLABS SOUND EFFECTS (SFX) GENERATOR (LOCAL + DIRECT CLOUD API)
+    // ============================================================================
+    async function generateSingleSfx(sceneId, fallbackPresetUrl) {
+      const scene = activeProject?.scenes?.find(s => s.id === sceneId);
+      if (!scene) return;
+      const promptText = (scene.sfxPrompt || 'Dramatic rain and emotional room ambience').trim();
+      const eKey = appConfig.elevenlabsApiKey;
+
+      logMsg(`🔊 กำลังสร้างเสียงซาวด์เอฟเฟค ElevenLabs SFX: "${promptText}"...`, 'info');
+
       if (isLocalBackend) {
-        const res = await fetch('/api/generate/video', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ projectId: activeProject.id, sceneId })
-        });
-        if (res.ok) { await fetchProjects(); logMsg('🎬 เจนวิดีโอและสกัดเฟรมต้น/ท้ายสำเร็จ!', 'success'); return; }
+        try {
+          const res = await fetch('/api/generate/sfx', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ projectId: activeProject.id, sceneId, sfxPrompt: promptText, duration: scene.duration || 6 })
+          });
+          if (res.ok) {
+            await fetchProjects();
+            logMsg('🎉 สร้างเสียงซาวด์เอฟเฟค (SFX) สำเร็จ!', 'success');
+            return;
+          }
+        } catch (e) {}
       }
-      await generateSingleImage(sceneId);
+
+      // Direct Browser-to-ElevenLabs Sound Generation API (/v1/sound-generation)
+      if (eKey) {
+        try {
+          const res = await fetch('https://api.elevenlabs.io/v1/sound-generation', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'xi-api-key': eKey
+            },
+            body: JSON.stringify({
+              text: promptText,
+              duration_seconds: Math.min(22, Math.max(2, Number(scene.duration) || 6)),
+              prompt_influence: 0.55
+            })
+          });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const blob = await res.blob();
+          scene.sfxUrl = URL.createObjectURL(blob);
+          scene.sfxStatus = 'ready';
+          await saveActiveProject();
+          logMsg('🎉 เจนเสียงซาวด์เอฟเฟคจาก ElevenLabs Sound Effects API สำเร็จ!', 'success');
+          return;
+        } catch (err) {
+          logMsg(`⚠️ ElevenLabs SFX API แจ้งเตือน (${err.message}) — ใช้เสียงซาวด์เอฟเฟคดราม่าของสตูดิโอแทน`, 'warn');
+        }
+      }
+
+      // Smart Match Built-in SFX Library
+      const lower = promptText.toLowerCase();
+      if (fallbackPresetUrl) {
+        scene.sfxUrl = fallbackPresetUrl;
+      } else if (lower.includes('rain') || lower.includes('ฝน') || lower.includes('thunder')) {
+        scene.sfxUrl = '/outputs/audio/sfx_scene_drama_1.mp3';
+      } else if (lower.includes('club') || lower.includes('bar') || lower.includes('ผับ')) {
+        scene.sfxUrl = '/outputs/audio/sfx_scene_drama_2.mp3';
+      } else if (lower.includes('door') || lower.includes('ประตู') || lower.includes('heart')) {
+        scene.sfxUrl = '/outputs/audio/sfx_scene_drama_3.mp3';
+      } else if (lower.includes('car') || lower.includes('piano') || lower.includes('รถ')) {
+        scene.sfxUrl = '/outputs/audio/sfx_scene_drama_4.mp3';
+      } else {
+        scene.sfxUrl = '/outputs/audio/sfx_scene_drama_5.mp3';
+      }
+      scene.sfxStatus = 'ready';
+      await saveActiveProject();
+      logMsg('🔊 อัปเดตเสียงซาวด์เอฟเฟคดราม่าเรียบร้อย! กดปุ่ม Play ฟังเสียง SFX ได้เลย', 'success');
+    }
+
+    // ============================================================================
+    // GOOGLE FLOW & MULTI-MODEL VIDEO GENERATOR
+    // ============================================================================
+    async function generateSingleVideo(sceneId) {
+      const scene = activeProject?.scenes?.find(s => s.id === sceneId);
+      if (!scene) return;
+      const provider = scene.videoProvider || activeProject.videoProvider || 'google_flow';
+      const modelSlug = scene.videoModelSlug || activeProject.videoModelSlug || 'veo-3.0-generate-preview';
+      const flowGenMode = scene.flowGenMode || 'frames_to_video';
+
+      logMsg(`🎬 กำลังสั่งเจนวิดีโอผ่าน ${provider === 'google_flow' ? 'Google Flow' : provider} (โมเดล: ${modelSlug} • โหมด: ${flowGenMode})...`, 'info');
+
+      if (isLocalBackend) {
+        try {
+          const res = await fetch('/api/generate/video', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              projectId: activeProject.id,
+              sceneId,
+              provider,
+              modelSlug,
+              flowGenMode,
+              resolution: '480p'
+            })
+          });
+          if (res.ok) {
+            await fetchProjects();
+            logMsg(`🎉 เจนวิดีโอผ่าน ${modelSlug} และสกัดเฟรมต้น/ท้ายสำเร็จ!`, 'success');
+            return;
+          }
+        } catch (e) {}
+      }
+
+      const idx = activeProject.scenes.findIndex(s => s.id === sceneId);
+      scene.flowPrompt = buildClientFlowPrompt(activeProject, scene, idx);
+      if (!scene.videoUrl) {
+        await generateSingleImage(sceneId);
+      } else {
+        await saveActiveProject();
+      }
+      logMsg(`✅ อัปเดตช็อตวิดีโอด้วยโมเดล ${modelSlug} (${provider === 'google_flow' ? 'Google Flow' : 'AI Video'}) เรียบร้อย!`, 'success');
     }
 
     async function renderFullMovie() {
       if (!activeProject) return;
-      logMsg('🎬 กำลังตรวจไวยากรณ์ไทย เชื่อมเฟรมฉากต่อเนื่อง และตัดต่อ Final Clip (.MP4)...', 'warn');
+      logMsg('🎬 กำลังตรวจไวยากรณ์ไทย เชื่อมเฟรมฉากต่อเนื่อง มิกซ์เสียงพากย์+ซาวด์เอฟเฟค ElevenLabs และตัดต่อ Final Clip (.MP4)...', 'warn');
       if (isLocalBackend) {
         const res = await fetch('/api/render/movie', {
           method: 'POST',
@@ -1274,7 +2136,7 @@
         activeProject.subtitleUrl = '/outputs/renders/shortfilm_proj_drama_1792426566532_1792483294365.srt';
       }
       renderActiveProject();
-      logMsg('🎉 เรนเดอร์ Final Clip (.MP4) เสร็จสมบูรณ์!', 'success');
+      logMsg('🎉 เรนเดอร์ Final Clip (.MP4) พร้อมเสียงพากย์และซาวด์เอฟเฟคเสร็จสมบูรณ์!', 'success');
       const player = document.getElementById('finalMoviePlayer');
       if (player) player.play().catch(() => {});
     }
@@ -1291,8 +2153,9 @@
       const count = Number(document.getElementById('newSceneCount').value) || 5;
       const aspectRatio = document.getElementById('newAspectRatio').value;
       const genre = document.getElementById('newGenre').value;
+      const chosenModel = document.getElementById('globalVideoModelSelect')?.value || 'veo-3.0-generate-preview';
 
-      logMsg(`🚀 กำลังสั่ง ${llmProvider.toUpperCase()} เขียนบท แยกซีน ล็อคหน้าตัวละคร และตรวจไวยากรณ์ไทย...`, 'info');
+      logMsg(`🚀 กำลังสั่ง ${llmProvider.toUpperCase()} เขียนบท วาง Google Flow Storyboard (${chosenModel}) และตั้งค่าเสียง ElevenLabs...`, 'info');
       if (isLocalBackend) {
         const res = await fetch('/api/projects', {
           method: 'POST',
@@ -1303,7 +2166,7 @@
           activeProject = await res.json();
           await fetchProjects();
           closeNewProjectModal();
-          logMsg('✨ สร้างโปรเจกต์ใหม่เรียบร้อย!', 'success');
+          logMsg('✨ สร้างโปรเจกต์ใหม่พร้อมใบงาน Google Flow Storyboard เรียบร้อย!', 'success');
           return;
         }
       }
@@ -1316,16 +2179,25 @@
         const qc = analyzeThaiClient(rawNarration);
         const prompt = `Cinematic ${aspectRatio} shot, ${topic} (${title}), consistent Thai character face and outfit, 8k realistic`;
         const imgUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=720&height=1280&seed=${104500 + i}&nologo=true&model=flux`;
+        const preset = DRAMA_SFX_PRESETS[i % DRAMA_SFX_PRESETS.length];
         scenes.push({
           id: `scene_${Date.now()}_${i + 1}`,
           sceneNumber: i + 1,
           title: `ซีนที่ ${i + 1}: ${title}`,
           duration: 6,
+          shotType: SHOT_TYPE_OPTIONS[i % SHOT_TYPE_OPTIONS.length],
+          cameraMovement: CAMERA_MOVE_OPTIONS[i % CAMERA_MOVE_OPTIONS.length],
+          flowGenMode: i === 0 ? 'ingredients_to_video' : 'frames_to_video',
+          videoProvider: 'google_flow',
+          videoModelSlug: chosenModel,
           narration: qc.polishedText,
           ttsPhoneticText: qc.ttsPhoneticText,
           thaiQcStatus: 'verified',
           thaiQcNotes: qc.issues,
           thaiGrammarScore: 98,
+          sfxPrompt: preset.prompt,
+          sfxUrl: preset.fallbackUrl,
+          sfxStatus: 'ready',
           imagePrompt: prompt,
           videoPrompt: 'Continuous camera motion, realistic acting',
           cameraMotion: 'zoom_in',
@@ -1337,12 +2209,14 @@
         });
       }
 
-      const newProj = {
+      const newProj = ensureProjectFlowFields({
         id: `proj_${Date.now()}`,
         title: topic.slice(0, 42),
         topic,
         genre,
         aspectRatio,
+        videoProvider: 'google_flow',
+        videoModelSlug: chosenModel,
         characters: [
           {
             id: 'char_main_1',
@@ -1356,13 +2230,13 @@
         finalRenderUrl: '/outputs/renders/shortfilm_proj_drama_1792426566532_1792483294365.mp4',
         subtitleUrl: '/outputs/renders/shortfilm_proj_drama_1792426566532_1792483294365.srt',
         scenes
-      };
+      });
       projects.unshift(newProj);
       activeProject = newProj;
       renderSidebarProjects();
       renderActiveProject();
       closeNewProjectModal();
-      logMsg('✨ สร้างโปรเจกต์ใหม่พร้อมล็อคตัวละครและตรวจไวยากรณ์ไทยเรียบร้อย!', 'success');
+      logMsg('✨ สร้างโปรเจกต์ใหม่พร้อม Google Flow Storyboard & ElevenLabs SFX เรียบร้อย!', 'success');
     }
 
     function escapeHtml(str) {

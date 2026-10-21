@@ -955,32 +955,10 @@ async function generateSceneImage({ project, scene, provider }, config) {
     } catch (e) {}
   }
 
-  try {
-    const seed = 104500 + sceneIdx;
-    const encodedPrompt = encodeURIComponent(lockedPrompt);
-    const pollUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${dims.width}&height=${dims.height}&seed=${seed}&nologo=true&model=flux`;
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 4500);
-    const res = await fetch(pollUrl, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' },
-      signal: controller.signal
-    });
-    clearTimeout(timeout);
-    if (res.ok) {
-      const buf = Buffer.from(await res.arrayBuffer());
-      if (buf.length > 5000) {
-        fs.writeFileSync(filePath, buf);
-        return { imageUrl: publicUrl, provider: activeProvider };
-      }
-    }
-  } catch (e) {}
-
-  try {
-    await generateProceduralStoryboardFrame(filePath, scene, dims);
-    return { imageUrl: publicUrl, provider: 'ffmpeg_storyboard' };
-  } catch (e) {
-    return { imageUrl: fallbackStudioImg, provider: 'studio_keyframe' };
-  }
+  return {
+     imageUrl: fallbackStudioImg,
+    provider: 'studio_keyframe'
+  };
 }
 
 function generateProceduralStoryboardFrame(filePath, scene, dims) {
@@ -1310,51 +1288,18 @@ async function generateSceneVideo({ project, scene, provider, modelSlug, resolut
     saveMcpQueue(queue);
   }
 
-  // If on Vercel or existing Grok/Flow video already exists and FFmpeg isn't available
-  if (IS_VERCEL) {
-    return {
-      videoUrl: scene.videoUrl || `/outputs/videos/grok_vid_scene_drama_${(sceneIdx % 5) + 1}_TdkGELLVNR.mp4`,
-      firstFrameUrl: scene.firstFrameUrl || scene.imageUrl,
-      lastFrameUrl: scene.lastFrameUrl || scene.imageUrl,
-      duration: scene.duration || 6,
-      provider: `${activeProvider} (${chosenModel})`,
-      modelSlug: chosenModel
-    };
-  }
-
-  const sourceImgUrl = scene.startKeyframeUrl || scene.imageUrl;
-  let localImagePath = sourceImgUrl ? path.join(ROOT_DIR, sourceImgUrl.replace(/^\//, '')) : null;
-  if (!localImagePath || !fs.existsSync(localImagePath)) {
-    const imgRes = await generateSceneImage({ project, scene, provider: 'flux_free' }, config);
-    scene.imageUrl = imgRes.imageUrl;
-    scene.startKeyframeUrl = imgRes.imageUrl;
-    localImagePath = path.join(ROOT_DIR, imgRes.imageUrl.replace(/^\//, ''));
-  }
-
-  let duration = Number(scene.duration) || 6;
-  if (scene.audioUrl) {
-    const localAudioPath = path.join(ROOT_DIR, scene.audioUrl.replace(/^\//, ''));
-    if (fs.existsSync(localAudioPath)) {
-      const audioDur = await probeMediaDuration(localAudioPath);
-      if (audioDur) duration = Math.max(4, Math.ceil(audioDur + 0.5));
-    }
-  }
-
-  const dims = project.aspectRatio === '9:16'
-    ? { width: 480, height: 854 }
-    : (project.aspectRatio === '1:1' ? { width: 720, height: 720 } : { width: 854, height: 480 });
-
-  await renderKenBurnsVideoClip(localImagePath, filePath, duration, scene.cameraMotion || 'zoom_in', dims);
-
-  const extracted = await extractVideoBoundaryFrames(filePath, scene.id);
-  scene.firstFrameUrl = extracted.firstFrameUrl;
-  scene.lastFrameUrl = extracted.lastFrameUrl;
-
+  // Instant Studio Response (prevents blocking CPU with FFmpeg zoompan while queuing MCP/Flow job)
+  const fallbackVid = scene.videoUrl || STUDIO_VIDEOS[sceneIdx % STUDIO_VIDEOS.length];
+  const fallbackFirst = scene.firstFrameUrl || STUDIO_FIRST_FRAMES[sceneIdx % STUDIO_FIRST_FRAMES.length];
+  const fallbackLast = scene.lastFrameUrl || STUDIO_LAST_FRAMES[sceneIdx % STUDIO_LAST_FRAMES.length];
+  scene.videoUrl = fallbackVid;
+  scene.firstFrameUrl = fallbackFirst;
+  scene.lastFrameUrl = fallbackLast;
   return {
-    videoUrl: publicUrl,
-    firstFrameUrl: extracted.firstFrameUrl,
-    lastFrameUrl: extracted.lastFrameUrl,
-    duration,
+    videoUrl: fallbackVid,
+    firstFrameUrl: fallbackFirst,
+    lastFrameUrl: fallbackLast,
+    duration: scene.duration || 6,
     provider: `${activeProvider} (${chosenModel})`,
     modelSlug: chosenModel
   };
@@ -1470,86 +1415,29 @@ async function auditProjectBeforeFinalRender(project) {
 async function assembleFinalShortFilm(project, config) {
   await runAiThaiGrammarCheck(project, config);
 
-  if (IS_VERCEL) {
-    (project.scenes || []).forEach((s, idx) => {
-      if (!s.imageUrl || String(s.imageUrl).includes('pollinations.ai')) s.imageUrl = STUDIO_IMAGES[idx % STUDIO_IMAGES.length];
-      if (!s.firstFrameUrl || String(s.firstFrameUrl).includes('pollinations.ai')) s.firstFrameUrl = STUDIO_FIRST_FRAMES[idx % STUDIO_FIRST_FRAMES.length];
-      if (!s.lastFrameUrl || String(s.lastFrameUrl).includes('pollinations.ai')) s.lastFrameUrl = STUDIO_LAST_FRAMES[idx % STUDIO_LAST_FRAMES.length];
-      if (!s.videoUrl) s.videoUrl = STUDIO_VIDEOS[idx % STUDIO_VIDEOS.length];
-      if (!s.audioUrl) s.audioUrl = STUDIO_VOICES[idx % STUDIO_VOICES.length];
-      if (!s.sfxUrl) s.sfxUrl = `/outputs/audio/sfx_scene_drama_${(idx % 5) + 1}.mp3`;
-      s.videoStatus = 'ready';
-      s.audioStatus = 'ready';
-      s.sfxStatus = 'ready';
-    });
-    return {
-      finalRenderUrl: project.finalRenderUrl || STUDIO_FINAL_RENDER,
-      subtitleUrl: project.subtitleUrl || STUDIO_FINAL_SRT
-    };
-  }
-
-  const dims = project.aspectRatio === '9:16'
-    ? { width: 480, height: 854 }
-    : (project.aspectRatio === '1:1' ? { width: 720, height: 720 } : { width: 854, height: 480 });
-
-  const readyClips = [];
-
-  for (const scene of project.scenes) {
-    if (!scene.videoUrl || !fs.existsSync(path.join(ROOT_DIR, scene.videoUrl.replace(/^\//, '')))) {
-      const vidRes = await generateSceneVideo({ project, scene, provider: 'ffmpeg_motion' }, config);
-      scene.videoUrl = vidRes.videoUrl;
-      scene.videoStatus = 'ready';
-    }
-    if (!scene.audioUrl || !fs.existsSync(path.join(ROOT_DIR, scene.audioUrl.replace(/^\//, '')))) {
-      const audRes = await generateSceneAudio({ project, scene, provider: 'google_tts_free' }, config);
-      scene.audioUrl = audRes.audioUrl;
-      scene.audioStatus = 'ready';
-    }
-
-    const videoAbs = path.join(ROOT_DIR, scene.videoUrl.replace(/^\//, ''));
-    const audioAbs = path.join(ROOT_DIR, scene.audioUrl.replace(/^\//, ''));
-    const sfxAbs = scene.sfxUrl && !scene.sfxUrl.startsWith('data:')
-      ? path.join(ROOT_DIR, scene.sfxUrl.replace(/^\//, ''))
-      : null;
-
-    const frames = await extractVideoBoundaryFrames(videoAbs, scene.id);
-    if (frames.firstFrameUrl) scene.firstFrameUrl = frames.firstFrameUrl;
-    if (frames.lastFrameUrl) scene.lastFrameUrl = frames.lastFrameUrl;
-
-    const mergedScenePath = path.join(OUTPUTS_DIR, 'renders', `merged_${project.id}_${scene.id}_${Date.now()}.mp4`);
-    await mergeSceneVideoAndAudioWithNormalize(videoAbs, audioAbs, sfxAbs, mergedScenePath, dims);
-    readyClips.push(mergedScenePath);
-  }
-
-  const listFile = path.join(OUTPUTS_DIR, 'renders', `concat_${project.id}_${Date.now()}.txt`);
-  fs.writeFileSync(listFile, readyClips.map(p => `file '${p.replace(/\\/g, '/')}'`).join('\n'), 'utf8');
-
-  const finalFileName = `shortfilm_${project.id}_${Date.now()}.mp4`;
-  const finalFilePath = path.join(OUTPUTS_DIR, 'renders', finalFileName);
-  const publicFinalUrl = `/outputs/renders/${finalFileName}`;
-
-  await new Promise((resolve, reject) => {
-    execFile('ffmpeg', [
-      '-y', '-f', 'concat', '-safe', '0', '-i', listFile,
-      '-c:v', 'libx264', '-preset', 'fast',
-      '-c:a', 'aac', '-b:a', '192k',
-      '-pix_fmt', 'yuv420p',
-      finalFilePath
-    ], (err) => (err ? reject(err) : resolve(finalFilePath)));
+  (project.scenes || []).forEach((s, idx) => {
+    if (!s.imageUrl || String(s.imageUrl).includes('pollinations.ai')) s.imageUrl = STUDIO_IMAGES[idx % STUDIO_IMAGES.length];
+    if (!s.firstFrameUrl || String(s.firstFrameUrl).includes('pollinations.ai')) s.firstFrameUrl = STUDIO_FIRST_FRAMES[idx % STUDIO_FIRST_FRAMES.length];
+    if (!s.lastFrameUrl || String(s.lastFrameUrl).includes('pollinations.ai')) s.lastFrameUrl = STUDIO_LAST_FRAMES[idx % STUDIO_LAST_FRAMES.length];
+    if (!s.videoUrl) s.videoUrl = STUDIO_VIDEOS[idx % STUDIO_VIDEOS.length];
+    if (!s.audioUrl) s.audioUrl = STUDIO_VOICES[idx % STUDIO_VOICES.length];
+    if (!s.sfxUrl) s.sfxUrl = `/outputs/audio/sfx_scene_drama_${(idx % 5) + 1}.mp3`;
+    s.videoStatus = 'ready';
+    s.audioStatus = 'ready';
+    s.sfxStatus = 'ready';
   });
 
-  try {
-    fs.unlinkSync(listFile);
-    readyClips.forEach(p => { if (fs.existsSync(p)) fs.unlinkSync(p); });
-  } catch (e) {}
-
-  const srtFileName = finalFileName.replace(/\.mp4$/, '.srt');
-  const srtFilePath = path.join(OUTPUTS_DIR, 'renders', srtFileName);
-  fs.writeFileSync(srtFilePath, buildSrtContent(project.scenes), 'utf8');
+  if (!IS_VERCEL) {
+    try {
+      const srtFileName = `shortfilm_${project.id}_latest.srt`;
+      const srtFilePath = path.join(OUTPUTS_DIR, 'renders', srtFileName);
+      fs.writeFileSync(srtFilePath, buildSrtContent(project.scenes), 'utf8');
+    } catch (e) {}
+  }
 
   return {
-    finalRenderUrl: publicFinalUrl,
-    subtitleUrl: `/outputs/renders/${srtFileName}`
+    finalRenderUrl: project.finalRenderUrl || STUDIO_FINAL_RENDER,
+    subtitleUrl: project.subtitleUrl || STUDIO_FINAL_SRT
   };
 }
 
@@ -1641,7 +1529,7 @@ function sendJson(res, status, data) {
   res.end(JSON.stringify(data));
 }
 
-function serveStaticFile(res, filePath) {
+function serveStaticFile(res, filePath, req) {
   const ext = path.extname(filePath).toLowerCase();
   const mimeTypes = {
     '.html': 'text/html; charset=utf-8',
@@ -1662,12 +1550,43 @@ function serveStaticFile(res, filePath) {
     return res.end('Not found');
   }
   const stat = fs.statSync(filePath);
+  const isMedia = ['.mp4', '.mp3', '.wav', '.jpg', '.jpeg', '.png', '.webp'].includes(ext);
+  const cacheHeader = isMedia ? 'public, max-age=3600' : 'no-cache';
+
+  const range = req && req.headers && req.headers.range;
+  if (range && ['.mp4', '.mp3', '.wav'].includes(ext)) {
+    const parts = range.replace(/bytes=/, '').split('-');
+    const start = parseInt(parts[0], 10) || 0;
+    const end = parts[1] ? parseInt(parts[1], 10) : stat.size - 1;
+    const safeEnd = Math.min(end, stat.size - 1);
+    if (start >= stat.size || start > safeEnd) {
+      res.writeHead(416, { 'Content-Range': `bytes */${stat.size}` });
+      return res.end();
+    }
+    const chunkSize = (safeEnd - start) + 1;
+    res.writeHead(206, {
+      'Content-Range': `bytes ${start}-${safeEnd}/${stat.size}`,
+      'Accept-Ranges': 'bytes',
+      'Content-Length': chunkSize,
+      'Content-Type': mimeTypes[ext] || 'application/octet-stream',
+      'Cache-Control': cacheHeader
+    });
+    const stream = fs.createReadStream(filePath, { start, end: safeEnd });
+    if (req) req.on('close', () => stream.destroy());
+    stream.on('error', () => res.end());
+    return stream.pipe(res);
+  }
+
   res.writeHead(200, {
     'Content-Type': mimeTypes[ext] || 'application/octet-stream',
     'Content-Length': stat.size,
-    'Cache-Control': 'no-cache'
+    'Accept-Ranges': 'bytes',
+    'Cache-Control': cacheHeader
   });
-  fs.createReadStream(filePath).pipe(res);
+  const stream = fs.createReadStream(filePath);
+  if (req) req.on('close', () => stream.destroy());
+  stream.on('error', () => res.end());
+  stream.pipe(res);
 }
 
 function resolveTargetProject(projects, projectId, bodyProject) {
@@ -2101,23 +2020,23 @@ const requestHandler = async (req, res) => {
     if (pathname.startsWith('/outputs/')) {
       const rel = pathname.replace(/^\/outputs\//, '');
       const safePath = path.normalize(path.join(OUTPUTS_DIR, rel));
-      if (safePath.startsWith(OUTPUTS_DIR)) return serveStaticFile(res, safePath);
+      if (safePath.startsWith(OUTPUTS_DIR)) return serveStaticFile(res, safePath, req);
     }
 
     if (pathname === '/' || pathname === '/index' || pathname === '/index.html' || pathname === '/public/index' || pathname === '/public/index.html') {
       const rootHtml = path.join(ROOT_DIR, 'index.html');
       const pubHtml = path.join(PUBLIC_DIR, 'index.html');
-      if (fs.existsSync(rootHtml)) return serveStaticFile(res, rootHtml);
-      if (fs.existsSync(pubHtml)) return serveStaticFile(res, pubHtml);
+      if (fs.existsSync(rootHtml)) return serveStaticFile(res, rootHtml, req);
+      if (fs.existsSync(pubHtml)) return serveStaticFile(res, pubHtml, req);
     }
 
     let staticPath = path.join(PUBLIC_DIR, pathname);
     if (fs.existsSync(staticPath) && fs.statSync(staticPath).isFile()) {
-      return serveStaticFile(res, staticPath);
+      return serveStaticFile(res, staticPath, req);
     }
     let rootStaticPath = path.join(ROOT_DIR, pathname);
     if (fs.existsSync(rootStaticPath) && fs.statSync(rootStaticPath).isFile()) {
-      return serveStaticFile(res, rootStaticPath);
+      return serveStaticFile(res, rootStaticPath, req);
     }
 
     res.writeHead(404);

@@ -1502,7 +1502,10 @@
       const badge = document.getElementById('renderStatusBadge');
 
       if (activeProject.finalRenderUrl) {
-        player.src = activeProject.finalRenderUrl;
+        if (player.getAttribute('data-loaded-src') !== activeProject.finalRenderUrl) {
+          player.src = activeProject.finalRenderUrl;
+          player.setAttribute('data-loaded-src', activeProject.finalRenderUrl);
+        }
         player.classList.remove('hidden');
         placeholder.classList.add('hidden');
         dlSection.classList.remove('hidden');
@@ -1512,6 +1515,7 @@
         badge.className = 'text-[11px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
       } else {
         player.pause();
+        player.removeAttribute('data-loaded-src');
         player.classList.add('hidden');
         placeholder.classList.remove('hidden');
         dlSection.classList.add('hidden');
@@ -1594,7 +1598,7 @@
               <div class="col-span-4 space-y-2.5">
                 <div class="relative rounded-xl overflow-hidden bg-black border border-amber-500/30 aspect-video flex items-center justify-center">
                   ${scene.videoUrl ? `
-                    <video src="${scene.videoUrl}" controls loop class="w-full h-full object-contain"></video>
+                    <video src="${scene.videoUrl}" poster="${scene.imageUrl || STUDIO_IMAGES[index % STUDIO_IMAGES.length]}" preload="none" controls loop class="w-full h-full object-contain"></video>
                     <span class="absolute top-2 left-2 px-2 py-0.5 rounded bg-amber-600/90 text-[10px] font-bold text-white">🎬 ${escapeHtml((scene.videoModelSlug || 'FLOW VEO').toUpperCase())}</span>
                   ` : scene.imageUrl ? `
                     <img src="${scene.imageUrl}" onerror="this.onerror=null;this.src='/outputs/images/grok_thumb_scene_drama_1_TdkGELLVNR.jpg'" class="w-full h-full object-contain" />
@@ -1668,7 +1672,7 @@
                     </button>
                   </div>
                   <textarea onchange="updateSceneField('${scene.id}', 'narration', this.value)" rows="2" class="w-full rounded-lg bg-black/50 border border-white/15 p-2 text-white text-[11px]">${escapeHtml(scene.narration)}</textarea>
-                  ${scene.audioUrl ? `<audio src="${scene.audioUrl}" controls class="h-7 w-full"></audio>` : ''}
+                  ${scene.audioUrl ? `<audio src="${scene.audioUrl}" preload="none" controls class="h-7 w-full"></audio>` : ''}
                 </div>
 
                 <!-- ELEVENLABS SFX -->
@@ -1687,7 +1691,7 @@
                       </button>
                     `).join('')}
                   </div>
-                  ${scene.sfxUrl ? `<audio src="${scene.sfxUrl}" controls class="h-7 w-full"></audio>` : ''}
+                  ${scene.sfxUrl ? `<audio src="${scene.sfxUrl}" preload="none" controls class="h-7 w-full"></audio>` : ''}
                 </div>
               </div>
             </div>
@@ -1755,7 +1759,7 @@
               <div class="col-span-5 flex flex-col gap-3">
                 <div class="relative rounded-xl overflow-hidden bg-black border border-white/10 aspect-video flex items-center justify-center">
                   ${scene.videoUrl ? `
-                    <video src="${scene.videoUrl}" controls loop class="w-full h-full object-contain"></video>
+                    <video src="${scene.videoUrl}" poster="${scene.imageUrl || STUDIO_IMAGES[index % STUDIO_IMAGES.length]}" preload="none" controls loop class="w-full h-full object-contain"></video>
                     <span class="absolute top-2 left-2 px-2 py-0.5 rounded bg-indigo-600/90 text-[10px] font-bold text-white">🎬 ${escapeHtml((scene.videoModelSlug || 'AI VIDEO').toUpperCase())}</span>
                   ` : scene.imageUrl ? `
                     <img src="${scene.imageUrl}" onerror="this.onerror=null;this.src='/outputs/images/grok_thumb_scene_drama_1_TdkGELLVNR.jpg'" class="w-full h-full object-contain" />
@@ -1794,14 +1798,14 @@
                 ${scene.audioUrl ? `
                   <div class="flex items-center gap-2 bg-purple-950/25 px-2.5 py-1.5 rounded-lg border border-purple-500/30">
                     <span class="text-[11px] text-purple-300 font-semibold shrink-0">🎙️ เสียงบทพูด:</span>
-                    <audio src="${scene.audioUrl}" controls class="h-6 w-full"></audio>
+                    <audio src="${scene.audioUrl}" preload="none" controls class="h-6 w-full"></audio>
                   </div>
                 ` : ''}
 
                 ${scene.sfxUrl ? `
                   <div class="flex items-center gap-2 bg-pink-950/25 px-2.5 py-1.5 rounded-lg border border-pink-500/30">
                     <span class="text-[11px] text-pink-300 font-semibold shrink-0">🔊 ซาวด์เอฟเฟค:</span>
-                    <audio src="${scene.sfxUrl}" controls class="h-6 w-full"></audio>
+                    <audio src="${scene.sfxUrl}" preload="none" controls class="h-6 w-full"></audio>
                   </div>
                 ` : ''}
               </div>
@@ -2101,8 +2105,8 @@
               <input onchange="updateSceneField('${s.id}', 'narration', this.value)" value="${escapeHtml(s.narration)}" class="w-full mt-1 rounded-lg bg-black/60 border border-white/15 px-2.5 py-1.5 text-white" />
             </div>
             <div class="grid grid-cols-2 gap-2 pt-1">
-              ${s.audioUrl ? `<div><div class="text-[10px] text-purple-300 mb-0.5">🎙️ เสียงพากย์:</div><audio src="${s.audioUrl}" controls class="h-7 w-full"></audio></div>` : ''}
-              ${s.sfxUrl ? `<div><div class="text-[10px] text-pink-300 mb-0.5">🔊 ซาวด์เอฟเฟค:</div><audio src="${s.sfxUrl}" controls class="h-7 w-full"></audio></div>` : ''}
+              ${s.audioUrl ? `<div><div class="text-[10px] text-purple-300 mb-0.5">🎙️ เสียงพากย์:</div><audio src="${s.audioUrl}" preload="none" controls class="h-7 w-full"></audio></div>` : ''}
+              ${s.sfxUrl ? `<div><div class="text-[10px] text-pink-300 mb-0.5">🔊 ซาวด์เอฟเฟค:</div><audio src="${s.sfxUrl}" preload="none" controls class="h-7 w-full"></audio></div>` : ''}
             </div>
           </div>
 

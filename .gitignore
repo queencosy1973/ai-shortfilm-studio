@@ -4,7 +4,6 @@ outputs/renders/*.txt
 data/config.json
 data/mcp_queue.json
 build-static.js
-public/outputs/
 public/data/
 .env
 .env.local

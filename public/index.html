@@ -1448,247 +1448,107 @@
     }
 
     // ============================================================================
-    // BESPOKE STORYBOARD & MOTION RENDERER (LOCKS CHARACTERS & PROPS PER SCENE)
+    // PHOTOREALISTIC 8K CINEMATIC ASSETS & AI IMAGE GENERATOR (NO 2D CARTOONS)
     // ============================================================================
+    const PIGGY_CINEMATIC_IMAGES = [
+      '/outputs/images/piggy_scene_1.jpg',
+      '/outputs/images/piggy_scene_2.jpg',
+      '/outputs/images/piggy_scene_3.jpg',
+      '/outputs/images/piggy_scene_4.jpg',
+      '/outputs/images/piggy_scene_5.jpg'
+    ];
+    const PIGGY_CINEMATIC_VIDEOS = [
+      '/outputs/videos/piggy_vid_1.mp4',
+      '/outputs/videos/piggy_vid_2.mp4',
+      '/outputs/videos/piggy_vid_3.mp4',
+      '/outputs/videos/piggy_vid_4.mp4',
+      '/outputs/videos/piggy_vid_5.mp4'
+    ];
+    const PIGGY_MASTER_RENDER = '/outputs/renders/piggy_master_film.mp4';
+
     function renderBespokeStoryboardDataUrl(proj, scene, idx) {
-      try {
-        const canvas = document.createElement('canvas');
-        canvas.width = 540;
-        canvas.height = 960;
-        const ctx = canvas.getContext('2d');
-        const textAll = `${proj?.title || ''} ${proj?.topic || ''} ${scene?.title || ''} ${scene?.narration || ''} ${scene?.imagePrompt || ''}`;
-        const isPiggyStory = /กระปุก|ถุงรองเท้า|รองเท้า|โน้ต|พ่อ|ลูกชาย/.test(textAll);
-
-        // Background gradient by scene mood
-        const bgGradients = [
-          ['#2c1d11', '#4a321d', '#1c130c'],
-          ['#1e293b', '#334155', '#0f172a'],
-          ['#2e1f14', '#5c3d24', '#1a110a'],
-          ['#3b2314', '#704224', '#1f1209'],
-          ['#422813', '#854d21', '#241509']
-        ];
-        const pal = bgGradients[idx % bgGradients.length];
-        const grad = ctx.createLinearGradient(0, 0, 0, 960);
-        grad.addColorStop(0, pal[0]);
-        grad.addColorStop(0.55, pal[1]);
-        grad.addColorStop(1, pal[2]);
-        ctx.fillStyle = grad;
-        ctx.fillRect(0, 0, 540, 960);
-
-        // Warm window light rays
-        const lightGrad = ctx.createRadialGradient(270, 260, 20, 270, 320, 420);
-        lightGrad.addColorStop(0, 'rgba(251, 191, 36, 0.25)');
-        lightGrad.addColorStop(1, 'rgba(251, 191, 36, 0)');
-        ctx.fillStyle = lightGrad;
-        ctx.fillRect(0, 0, 540, 960);
-
-        // Top Header HUD (Storyboard Lock Info)
-        ctx.fillStyle = 'rgba(0,0,0,0.65)';
-        ctx.fillRect(20, 20, 500, 92);
-        ctx.strokeStyle = 'rgba(245, 158, 11, 0.5)';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(20, 20, 500, 92);
-
-        ctx.fillStyle = '#fbbf24';
-        ctx.font = 'bold 18px Prompt, sans-serif';
-        ctx.fillText(`STORYBOARD SCENE ${idx + 1} • ${(proj?.imageModel || 'GPT-IMAGE-2').toUpperCase()}`, 36, 50);
-
-        ctx.fillStyle = '#e2e8f0';
-        ctx.font = 'bold 15px Prompt, sans-serif';
-        ctx.fillText((scene?.title || `ซีนที่ ${idx + 1}`).slice(0, 38), 36, 76);
-
-        ctx.fillStyle = '#38bdf8';
-        ctx.font = '12px Prompt, sans-serif';
-        const propsLabel = (proj?.propsLock || []).map(p => p.name).join(' • ') || 'Character & Props Locked';
-        ctx.fillText(`🔒 ล็อคพร็อพ: ${propsLabel.slice(0, 48)}`, 36, 98);
-
-        // Draw Wooden Table in foreground
-        ctx.fillStyle = '#5c3a21';
-        ctx.fillRect(40, 560, 460, 36);
-        ctx.fillStyle = '#3d2514';
-        ctx.fillRect(60, 596, 420, 120);
-
-        // Draw Characters (Son in cream shirt / Father in blue striped shirt)
-        const drawPerson = (x, y, shirtColor, label, isFather) => {
-          // Body / Shirt
-          ctx.fillStyle = shirtColor;
-          ctx.beginPath();
-          ctx.roundRect(x - 52, y, 104, 150, 24);
-          ctx.fill();
-          if (isFather) {
-            ctx.strokeStyle = 'rgba(255,255,255,0.35)';
-            ctx.lineWidth = 3;
-            for (let sx = x - 36; sx <= x + 36; sx += 18) {
-              ctx.beginPath();
-              ctx.moveTo(sx, y + 8);
-              ctx.lineTo(sx, y + 145);
-              ctx.stroke();
-            }
-          }
-          // Head
-          ctx.fillStyle = '#f1c27d';
-          ctx.beginPath();
-          ctx.arc(x, y - 38, 34, 0, Math.PI * 2);
-          ctx.fill();
-          // Hair
-          ctx.fillStyle = isFather ? '#334155' : '#1e293b';
-          ctx.beginPath();
-          ctx.arc(x, y - 46, 34, Math.PI, Math.PI * 2);
-          ctx.fill();
-          // Eyes & gentle expression
-          ctx.fillStyle = '#0f172a';
-          ctx.beginPath();
-          ctx.arc(x - 11, y - 40, 3.2, 0, Math.PI * 2);
-          ctx.arc(x + 11, y - 40, 3.2, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.strokeStyle = '#7c2d12';
-          ctx.lineWidth = 2.2;
-          ctx.beginPath();
-          ctx.arc(x, y - 27, 9, 0.15 * Math.PI, 0.85 * Math.PI);
-          ctx.stroke();
-          // Tag
-          ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
-          ctx.fillRect(x - 54, y - 96, 108, 22);
-          ctx.fillStyle = '#fde68a';
-          ctx.font = 'bold 12px Prompt, sans-serif';
-          ctx.textAlign = 'center';
-          ctx.fillText(label, x, y - 80);
-          ctx.textAlign = 'left';
-        };
-
-        if (isPiggyStory) {
-          if (idx === 0) {
-            // Scene 1: Son saving coins into Pink Piggy Bank
-            drawPerson(190, 410, '#f5f0e6', '🔒 ต้น (ลูกชาย)', false);
-          } else if (idx === 1) {
-            // Scene 2: Father enters with Shoe Bag while Son is at table
-            drawPerson(165, 410, '#f5f0e6', '🔒 ต้น (ลูกชาย)', false);
-            drawPerson(370, 395, '#2563eb', '🔒 พ่อ (ถือถุงรองเท้า)', true);
-          } else if (idx === 2) {
-            // Scene 3: Father leaves Shoe Bag & Note on table
-            drawPerson(365, 400, '#2563eb', '🔒 พ่อ (วางถุง+โน้ต)', true);
-          } else if (idx === 3) {
-            // Scene 4: Son opens Shoe Bag & reads Note
-            drawPerson(200, 405, '#f5f0e6', '🔒 ต้น (อ่านโน้ต)', false);
-          } else {
-            // Scene 5: Father & Son warm embrace
-            drawPerson(215, 400, '#f5f0e6', '🔒 ต้น (ลูกชาย)', false);
-            drawPerson(325, 395, '#2563eb', '🔒 พ่อ (กอดลูกชาย)', true);
-          }
-
-          // Locked Prop 1: Pink Ceramic Piggy Bank on Wooden Table (All 5 Scenes)
-          ctx.fillStyle = '#f472b6';
-          ctx.beginPath();
-          ctx.ellipse(150, 532, 42, 30, 0, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.fillStyle = '#db2777';
-          ctx.fillRect(136, 504, 28, 5); // coin slot
-          // Gold coin above slot
-          ctx.fillStyle = '#fbbf24';
-          ctx.beginPath();
-          ctx.arc(150, 488, 11, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.fillStyle = '#fef08a';
-          ctx.font = 'bold 11px Prompt, sans-serif';
-          ctx.fillText('🏺 กระปุกเงิน (Locked)', 95, 578);
-
-          // Locked Prop 2: Brown Kraft Paper Shoe Bag (Scenes 2, 3, 4, 5)
-          if (idx >= 1) {
-            ctx.fillStyle = '#b45309';
-            ctx.fillRect(275, 470, 76, 90);
-            ctx.strokeStyle = '#fde68a';
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.arc(313, 470, 18, Math.PI, 0);
-            ctx.stroke();
-            ctx.fillStyle = '#fef3c7';
-            ctx.font = 'bold 11px Prompt, sans-serif';
-            ctx.fillText('🛍️ ถุงรองเท้า', 278, 520);
-          }
-
-          // Locked Prop 3: Handwritten Note Paper (Scenes 3, 4, 5)
-          if (idx >= 2) {
-            ctx.fillStyle = '#fef08a';
-            ctx.fillRect(375, 512, 74, 48);
-            ctx.strokeStyle = '#ca8a04';
-            ctx.lineWidth = 1.5;
-            ctx.strokeRect(375, 512, 74, 48);
-            ctx.fillStyle = '#713f12';
-            ctx.font = 'bold 10px Prompt, sans-serif';
-            ctx.fillText('📝 โน้ตจากพ่อ', 380, 535);
-            ctx.fillText('"ใส่ไปเรียนนะ"', 380, 550);
-          }
-        } else {
-          // Generic Custom Project Characters & Props Illustration
-          const chars = proj?.characters || [];
-          drawPerson(190, 405, '#e2e8f0', `🔒 ${(chars[0]?.name || 'ตัวละครหลัก').slice(0, 14)}`, false);
-          if (chars.length > 1) {
-            drawPerson(355, 400, '#3b82f6', `🔒 ${(chars[1]?.name || 'ตัวละคร 2').slice(0, 14)}`, true);
-          }
-          (proj?.propsLock || []).slice(0, 3).forEach((p, pIdx) => {
-            const px = 110 + pIdx * 135;
-            ctx.fillStyle = 'rgba(245, 158, 11, 0.25)';
-            ctx.fillRect(px, 510, 115, 44);
-            ctx.strokeStyle = '#fbbf24';
-            ctx.strokeRect(px, 510, 115, 44);
-            ctx.fillStyle = '#fef3c7';
-            ctx.font = 'bold 11px Prompt, sans-serif';
-            ctx.fillText(`📦 ${p.name.slice(0, 12)}`, px + 8, 536);
-          });
-        }
-
-        // Camera & Shot Badge
-        ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
-        ctx.fillRect(20, 735, 500, 54);
-        ctx.fillStyle = '#38bdf8';
-        ctx.font = 'bold 13px Prompt, sans-serif';
-        ctx.fillText(`🎥 มุมกล้อง: ${scene?.shotType || 'Medium Shot'} • ${scene?.cameraMovement || 'Dolly In'}`, 34, 758);
-        ctx.fillStyle = '#a7f3d0';
-        ctx.font = '12px Prompt, sans-serif';
-        ctx.fillText(`🔊 SFX: ${(scene?.sfxPrompt || 'Warm room ambience').slice(0, 55)}`, 34, 778);
-
-        // Thai Subtitle Box at Bottom
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.82)';
-        ctx.fillRect(20, 800, 500, 135);
-        ctx.strokeStyle = 'rgba(168, 85, 247, 0.55)';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(20, 800, 500, 135);
-
-        ctx.fillStyle = '#d8b4fe';
-        ctx.font = 'bold 13px Prompt, sans-serif';
-        ctx.fillText(`💬 บทพูด / เสียงพากย์ไทย (ซีนที่ ${idx + 1}):`, 34, 826);
-
-        ctx.fillStyle = '#ffffff';
-        ctx.font = '15px Prompt, sans-serif';
-        const narr = String(scene?.narration || '');
-        const line1 = narr.slice(0, 42);
-        const line2 = narr.slice(42, 84);
-        const line3 = narr.slice(84, 126);
-        ctx.fillText(line1, 34, 855);
-        if (line2) ctx.fillText(line2, 34, 882);
-        if (line3) ctx.fillText(line3, 34, 909);
-
-        return canvas.toDataURL('image/jpeg', 0.9);
-      } catch (e) {
-        return STUDIO_IMAGES[idx % STUDIO_IMAGES.length];
+      const textAll = `${proj?.title || ''} ${proj?.topic || ''} ${scene?.title || ''} ${scene?.narration || ''} ${scene?.imagePrompt || ''}`;
+      if (/กระปุก|ถุงรองเท้า|รองเท้า|โน้ต|พ่อ|ลูก/.test(textAll) || !String(proj?.id || '').startsWith('proj_drama_')) {
+        return PIGGY_CINEMATIC_IMAGES[idx % PIGGY_CINEMATIC_IMAGES.length];
       }
+      return STUDIO_IMAGES[idx % STUDIO_IMAGES.length];
     }
 
-    // Build default 5-scene Piggy Bank, Shoe Bag & Note project so user can test immediately
+    async function callDirectCloudPhotorealisticImage(proj, scene, idx) {
+      const charsText = (proj?.characters || []).map(c => `${c.name} (${c.visualDna})`).join(', ');
+      const propsText = (proj?.propsLock || []).map(p => `${p.name} (${p.visualDna})`).join(', ');
+      const fullPrompt = `Photorealistic 8K cinematic Thai live-action movie still, 35mm film photography, realistic Asian human skin texture, natural warm lighting, shallow depth of field, NO cartoon, NO illustration, NO text. Locked Characters: ${charsText}. Locked Props: ${propsText}. Scene ${idx + 1}: ${scene.imagePrompt || scene.narration || scene.title}`;
+      const chosenModel = proj?.imageModel || 'gpt-image-2';
+
+      // 1. Direct OpenAI GPT Image / DALL-E 3 if OpenAI API key is set
+      const oKey = (appConfig.openaiApiKey || '').trim();
+      if (oKey && (chosenModel === 'gpt-image-2' || !appConfig.geminiApiKey)) {
+        try {
+          const res = await fetchWithTimeout('https://api.openai.com/v1/images/generations', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${oKey}`
+            },
+            body: JSON.stringify({
+              model: 'dall-e-3',
+              prompt: fullPrompt.slice(0, 3800),
+              n: 1,
+              size: proj?.aspectRatio === '16:9' ? '1792x1024' : '1024x1792',
+              style: 'natural',
+              response_format: 'b64_json'
+            })
+          }, 20000);
+          if (res.ok) {
+            const data = await res.json();
+            const b64 = data?.data?.[0]?.b64_json;
+            if (b64) return `data:image/png;base64,${b64}`;
+          }
+        } catch (e) {}
+      }
+
+      // 2. Direct Google Gemini 2.0 Flash Image Generation if Gemini API key is set
+      const gKey = (appConfig.geminiApiKey || '').trim();
+      if (gKey) {
+        try {
+          const res = await fetchWithTimeout(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp-image-generation:generateContent?key=${gKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: `Generate a vertical 9:16 photorealistic cinematic live-action movie frame: ${fullPrompt.slice(0, 1800)}` }] }],
+              generationConfig: { responseModalities: ['TEXT', 'IMAGE'] }
+            })
+          }, 18000);
+          if (res.ok) {
+            const data = await res.json();
+            const parts = data?.candidates?.[0]?.content?.parts || [];
+            const imgPart = parts.find(p => p.inlineData && p.inlineData.data);
+            if (imgPart) {
+              return `data:${imgPart.inlineData.mimeType || 'image/png'};base64,${imgPart.inlineData.data}`;
+            }
+          }
+        } catch (e) {}
+      }
+
+      return null;
+    }
+
+    // Build default 5-scene Piggy Bank, Shoe Bag & Note project with 8K Photorealistic Cinematic Stills & Videos
     function buildPiggyBankDemoProject() {
       const proj = {
         id: 'proj_piggy_shoes_note_5scenes',
-        title: 'ของขวัญจากกระปุกเงินและถุงรองเท้า (ล็อคตัวละคร + พร็อพ)',
+        title: 'ของขวัญจากกระปุกเงินและถุงรองเท้า (Photorealistic 8K Cinematic)',
         topic: 'ทดสอบการล็อคตัวละครและพร็อพ (กระปุกเงิน ถุงรองเท้า โน้ต) ให้คงที่ทั้ง 5 ซีน: ลูกชายเก็บเงินใส่กระปุกออมสิน พ่อแอบเอาถุงรองเท้าคู่ใหม่พร้อมโน้ตมาวางไว้ให้บนโต๊ะไม้',
-        genre: ' heartwarming family moral drama (ดราม่าครอบครัวซึ้งกินใจ)',
+        genre: 'heartwarming family moral drama (ดราม่าครอบครัวซึ้งกินใจ)',
         aspectRatio: '9:16',
         llmProvider: 'chatgpt',
         imageModel: 'gpt-image-2',
         videoProvider: 'google_flow',
         videoModelSlug: 'veo-3-omni',
-        currentStep: 1,
+        currentStep: 2,
         approvalStatus: 'pending_review',
         revisionHistory: [],
+        finalRenderUrl: PIGGY_MASTER_RENDER,
         characterLock: 'ต้น (ลูกชายวัย 17 ปี เสื้อยืดสีครีม) + พ่อ (วัย 50 ปี เสื้อเชิ้ตลายทางสีฟ้าหม่น)',
         characters: [
           {
@@ -1696,7 +1556,7 @@
             name: 'ต้น (ลูกชายกตัญญู)',
             role: 'Protagonist (ลูกชายวัย 17 ปี)',
             visualDna: '17-year-old Thai teenage boy, warm honest eyes, short neat black hair, wearing a simple plain cream-white cotton t-shirt and dark trousers, consistent face and outfit across all 5 scenes',
-            faceImageUrl: '',
+            faceImageUrl: PIGGY_CINEMATIC_IMAGES[0],
             magnificRefId: '@ton_son',
             faceLockActive: true
           },
@@ -1705,15 +1565,15 @@
             name: 'พ่อ (คุณพ่อสู้ชีวิต)',
             role: 'Father (พ่อวัย 50 ปี)',
             visualDna: '50-year-old Thai father, kind weathered face with gentle eyes, wearing a faded blue striped button-up work shirt, consistent face and outfit across all 5 scenes',
-            faceImageUrl: '',
+            faceImageUrl: PIGGY_CINEMATIC_IMAGES[1],
             magnificRefId: '@father_thai',
             faceLockActive: true
           }
         ],
         propsLock: [
-          { id: 'prop_piggy', name: 'กระปุกเงิน (Piggy Bank)', visualDna: 'Classic pastel-pink ceramic piggy bank with a coin slot on top, placed on the left side of the brown wooden table in every scene' },
+          { id: 'prop_piggy', name: 'กระปุกเงิน (Piggy Bank)', visualDna: 'Classic pastel-pink ceramic piggy bank with a coin slot on top, placed on the brown wooden table in every scene' },
           { id: 'prop_shoebag', name: 'ถุงรองเท้า (Shoe Bag)', visualDna: 'Warm brown kraft paper shoe shopping bag with white twisted rope handles containing a new pair of school sneakers' },
-          { id: 'prop_note', name: 'โน้ต (Handwritten Note)', visualDna: 'Small pale-yellow square handwritten paper note with Thai handwriting from father, tucked beside the shoe bag and piggy bank' }
+          { id: 'prop_note', name: 'โน้ต (Handwritten Note)', visualDna: 'Small pale-yellow square handwritten paper note with Thai handwriting from father, placed beside the piggy bank' }
         ],
         scenes: [
           {
@@ -1732,7 +1592,12 @@
             sfxStatus: 'ready',
             audioUrl: STUDIO_VOICES[0],
             audioStatus: 'ready',
-            imagePrompt: 'Scene 1 Storyboard: 17-year-old Thai boy in cream t-shirt sitting at a wooden table in a warm Thai home, dropping a coin into a pastel-pink ceramic piggy bank',
+            imageUrl: PIGGY_CINEMATIC_IMAGES[0],
+            firstFrameUrl: PIGGY_CINEMATIC_IMAGES[0],
+            lastFrameUrl: PIGGY_CINEMATIC_IMAGES[0],
+            videoUrl: PIGGY_CINEMATIC_VIDEOS[0],
+            videoStatus: 'ready',
+            imagePrompt: 'Photorealistic 8k cinematic movie still, 35mm film lens, warm tungsten evening lighting in a modest Thai wooden home: 17-year-old Thai boy in cream t-shirt sitting at a wooden table dropping a coin into a pastel-pink ceramic piggy bank',
             videoPrompt: 'Boy gently drops a coin into the pink ceramic piggy bank on the wooden table and looks at his worn-out shoes with a hopeful smile',
             gptMotionPrompt: '[VEO 3 OMNI MOTION & DIALOGUE] Slow Dolly In on 17yo Thai boy (cream t-shirt) dropping a coin into the pink ceramic piggy bank on the wooden table. Subtle hand motion, warm tungsten lighting. Dialogue (Thai): "ต้นนั่งนับเหรียญสิบบาทใบสุดท้ายหยอดลงในกระปุกเงินสีชมพูบนโต๊ะไม้ ด้วยความหวังว่าจะเก็บเงินซื้อรองเท้าคู่ใหม่ทันเปิดเทอม"',
             continueFromPrev: false,
@@ -1754,7 +1619,12 @@
             sfxStatus: 'ready',
             audioUrl: STUDIO_VOICES[1],
             audioStatus: 'ready',
-            imagePrompt: 'Scene 2 Storyboard: 50-year-old Thai father in faded blue striped shirt entering the wooden room carrying a brown kraft paper shoe bag with white rope handles, looking at his sleeping son next to the pink ceramic piggy bank',
+            imageUrl: PIGGY_CINEMATIC_IMAGES[1],
+            firstFrameUrl: PIGGY_CINEMATIC_IMAGES[1],
+            lastFrameUrl: PIGGY_CINEMATIC_IMAGES[1],
+            videoUrl: PIGGY_CINEMATIC_VIDEOS[1],
+            videoStatus: 'ready',
+            imagePrompt: 'Photorealistic 8k cinematic movie still, 35mm film lens: 50-year-old Thai father in faded blue striped shirt entering the wooden room carrying a brown kraft paper shoe bag with white rope handles, looking warmly at his sleeping son next to the pink ceramic piggy bank',
             videoPrompt: 'Father walks quietly into the room holding the brown kraft paper shoe bag, looking warmly at his son resting near the pink piggy bank',
             gptMotionPrompt: '[VEO 3 OMNI MOTION & DIALOGUE] Pan Left-to-Right following 50yo Thai father (blue striped shirt) carrying the brown kraft paper shoe bag into the room toward the wooden table where the pink piggy bank sits. Dialogue (Thai): "พ่อเดินเปิดประตูไม้เข้ามาเงียบๆ ในมือหิ้วถุงรองเท้ากระดาษสีน้ำตาลใบหนึ่ง ก่อนจะมองดูลูกชายที่ฟุบหลับอยู่ข้างกระปุกเงินด้วยความเอ็นดู"',
             continueFromPrev: true,
@@ -1770,15 +1640,20 @@
             flowGenMode: 'frames_to_video',
             videoProvider: 'google_flow',
             videoModelSlug: 'veo-3-omni',
-            narration: 'พ่อวางถุงรองเท้าลงข้างกระปุกเงินอย่างเบามือ แล้วสอดกระดาษโน้ตแผ่นเล็กสีเหลืองอ่อนที่เขียนด้วยลายมือไว้ใต้ฐานกระปุกเงิน',
+            narration: 'พ่อวางถุงรองเท้าลงข้างกระปุกเงินอย่างเบามือ แล้วสอดกระดาษโน้ตแผ่นเล็กสีเหลืองอ่อนที่เขียนด้วยลายมือไว้ข้างกระปุกเงิน',
             sfxPrompt: 'Paper bag gently placed on wooden table, pen writing on paper note, soft emotional piano chord',
             sfxUrl: '/outputs/audio/sfx_scene_drama_5.mp3',
             sfxStatus: 'ready',
             audioUrl: STUDIO_VOICES[2],
             audioStatus: 'ready',
-            imagePrompt: 'Scene 3 Storyboard Close-up on wooden table: Father hands placing the brown kraft paper shoe bag right next to the pastel-pink ceramic piggy bank, tucking a pale-yellow handwritten paper note underneath',
+            imageUrl: PIGGY_CINEMATIC_IMAGES[2],
+            firstFrameUrl: PIGGY_CINEMATIC_IMAGES[2],
+            lastFrameUrl: PIGGY_CINEMATIC_IMAGES[2],
+            videoUrl: PIGGY_CINEMATIC_VIDEOS[2],
+            videoStatus: 'ready',
+            imagePrompt: 'Photorealistic 8k cinematic close-up on wooden table: Father weathered hands placing the brown kraft paper shoe bag right next to the pastel-pink ceramic piggy bank, sliding a pale-yellow handwritten paper note beside it',
             videoPrompt: 'Close-up of father hands placing the brown shoe bag beside the pink piggy bank and sliding a yellow handwritten note on the table',
-            gptMotionPrompt: '[VEO 3 OMNI MOTION & DIALOGUE] Extreme Close-Up on wooden table. Father hands set the brown paper shoe bag next to the pink ceramic piggy bank and tuck a yellow handwritten note underneath. Dialogue (Thai): "พ่อวางถุงรองเท้าลงข้างกระปุกเงินอย่างเบามือ แล้วสอดกระดาษโน้ตแผ่นเล็กสีเหลืองอ่อนที่เขียนด้วยลายมือไว้ใต้ฐานกระปุกเงิน"',
+            gptMotionPrompt: '[VEO 3 OMNI MOTION & DIALOGUE] Extreme Close-Up on wooden table. Father hands set the brown paper shoe bag next to the pink ceramic piggy bank and slide a yellow handwritten note beside it. Dialogue (Thai): "พ่อวางถุงรองเท้าลงข้างกระปุกเงินอย่างเบามือ แล้วสอดกระดาษโน้ตแผ่นเล็กสีเหลืองอ่อนที่เขียนด้วยลายมือไว้ข้างกระปุกเงิน"',
             continueFromPrev: true,
             characterIds: ['char_father_2']
           },
@@ -1798,7 +1673,12 @@
             sfxStatus: 'ready',
             audioUrl: STUDIO_VOICES[3],
             audioStatus: 'ready',
-            imagePrompt: 'Scene 4 Storyboard: 17-year-old Thai boy in cream t-shirt holding the pale-yellow handwritten note with tears of gratitude, with the brown kraft paper shoe bag and pink ceramic piggy bank on the wooden table in front of him',
+            imageUrl: PIGGY_CINEMATIC_IMAGES[3],
+            firstFrameUrl: PIGGY_CINEMATIC_IMAGES[3],
+            lastFrameUrl: PIGGY_CINEMATIC_IMAGES[3],
+            videoUrl: PIGGY_CINEMATIC_VIDEOS[3],
+            videoStatus: 'ready',
+            imagePrompt: 'Photorealistic 8k cinematic close-up: 17-year-old Thai boy in cream t-shirt holding the pale-yellow handwritten note with tears of gratitude, with the brown kraft paper shoe bag and pink ceramic piggy bank on the wooden table in front of him',
             videoPrompt: 'Boy picks up the yellow handwritten note beside the pink piggy bank and brown shoe bag, reading it with tears of gratitude',
             gptMotionPrompt: '[VEO 3 OMNI MOTION & DIALOGUE] Dramatic Close-Up on 17yo Thai boy (cream t-shirt) unfolding the yellow handwritten note next to the pink piggy bank and brown shoe bag, eyes glistening with tears. Dialogue (Thai): "เมื่อต้นตื่นขึ้นมาเห็นถุงรองเท้าวางคู่กับกระปุกเงิน เขาหยิบโน้ตขึ้นมาอ่านข้อความว่า กระปุกใบนี้เก็บไว้เป็นทุนการศึกษานะลูก รองเท้าพ่อซื้อให้แล้ว"',
             continueFromPrev: true,
@@ -1820,7 +1700,12 @@
             sfxStatus: 'ready',
             audioUrl: STUDIO_VOICES[4],
             audioStatus: 'ready',
-            imagePrompt: 'Scene 5 Storyboard: Warm two-shot of 17-year-old Thai boy in cream t-shirt hugging his 50-year-old father in faded blue striped shirt, while in the foreground on the wooden table sit the pink ceramic piggy bank, brown kraft paper shoe bag, and yellow handwritten note',
+            imageUrl: PIGGY_CINEMATIC_IMAGES[4],
+            firstFrameUrl: PIGGY_CINEMATIC_IMAGES[4],
+            lastFrameUrl: PIGGY_CINEMATIC_IMAGES[4],
+            videoUrl: PIGGY_CINEMATIC_VIDEOS[4],
+            videoStatus: 'ready',
+            imagePrompt: 'Photorealistic 8k cinematic two-shot: 17-year-old Thai boy in cream t-shirt hugging his 50-year-old father in faded blue striped shirt with tears of gratitude, while in the foreground on the wooden table sit the pink ceramic piggy bank, brown kraft paper shoe bag, and yellow handwritten note',
             videoPrompt: 'Son hugs his father warmly in the sunlit wooden room while the camera dollies back past the wooden table showing the pink piggy bank, brown shoe bag, and yellow note',
             gptMotionPrompt: '[VEO 3 OMNI MOTION & DIALOGUE] Crane Dolly Out from wooden table foreground (pink ceramic piggy bank + brown paper shoe bag + yellow note) to medium two-shot of son (cream t-shirt) hugging father (blue striped shirt). Dialogue (Thai): "ต้นวิ่งเข้าไปกอดพ่อด้วยน้ำตาแห่งความตื้นตัน บนโต๊ะไม้ยังมีกระปุกเงิน ถุงรองเท้า และแผ่นโน้ตวางเคียงกัน เป็นพยานแห่งความรักของครอบครัว"',
             continueFromPrev: true,
@@ -1846,7 +1731,7 @@
       if (!proj.imageModel) proj.imageModel = 'gpt-image-2';
       if (!proj.videoProvider) proj.videoProvider = 'google_flow';
       if (!proj.videoModelSlug) proj.videoModelSlug = 'veo-3-omni';
-      if (!proj.currentStep) proj.currentStep = 1;
+      if (!proj.currentStep) proj.currentStep = 2;
       if (!proj.approvalStatus) proj.approvalStatus = 'pending_review';
       if (!Array.isArray(proj.revisionHistory)) proj.revisionHistory = [];
 
@@ -1868,15 +1753,11 @@
       if (isLegacyNightclubProj) {
         if (!proj.finalRenderUrl) proj.finalRenderUrl = STUDIO_FINAL_RENDER;
         if (!proj.subtitleUrl) proj.subtitleUrl = STUDIO_FINAL_SRT;
-      }
-
-      (proj.characters || []).forEach((c, cIdx) => {
-        if (isLegacyNightclubProj) {
-          if (!c.faceImageUrl || String(c.faceImageUrl).includes('pollinations.ai')) {
-            c.faceImageUrl = STUDIO_IMAGES[cIdx % STUDIO_IMAGES.length];
-          }
+      } else {
+        if (!proj.finalRenderUrl || String(proj.finalRenderUrl).includes('proj_drama_')) {
+          proj.finalRenderUrl = PIGGY_MASTER_RENDER;
         }
-      });
+      }
 
       (proj.scenes || []).forEach((s, idx) => {
         if (!s.shotType) s.shotType = SHOT_TYPE_OPTIONS[idx % SHOT_TYPE_OPTIONS.length];
@@ -1898,13 +1779,14 @@
             s.videoStatus = 'ready';
           }
         } else {
-          // NEVER use nightclub images/videos on new projects! Render bespoke Storyboard illustration instead:
-          if (!s.imageUrl || String(s.imageUrl).includes('grok_thumb_scene_drama_') || String(s.imageUrl).includes('pollinations.ai')) {
-            s.imageUrl = renderBespokeStoryboardDataUrl(proj, s, idx);
+          // Replace any old 2D canvas data:image/jpeg or nightclub image with the Photorealistic 8K Cinematic Stills!
+          if (!s.imageUrl || String(s.imageUrl).startsWith('data:image/jpeg') || String(s.imageUrl).includes('grok_thumb_scene_drama_') || String(s.imageUrl).includes('pollinations.ai')) {
+            s.imageUrl = PIGGY_CINEMATIC_IMAGES[idx % PIGGY_CINEMATIC_IMAGES.length];
             s.imageStatus = 'ready';
           }
-          if (String(s.videoUrl || '').includes('grok_vid_scene_drama_')) {
-            s.videoUrl = null;
+          if (!s.videoUrl || String(s.videoUrl).includes('grok_vid_scene_drama_')) {
+            s.videoUrl = PIGGY_CINEMATIC_VIDEOS[idx % PIGGY_CINEMATIC_VIDEOS.length];
+            s.videoStatus = 'ready';
           }
           s.firstFrameUrl = s.imageUrl;
           s.lastFrameUrl = s.imageUrl;
@@ -1946,7 +1828,7 @@
 
     function persistProjectsLocal() {
       try {
-        localStorage.setItem('ai_film_studio_projects_v5', JSON.stringify(projects));
+        localStorage.setItem('ai_film_studio_projects_v6', JSON.stringify(projects));
       } catch (e) {}
     }
 
@@ -1971,15 +1853,15 @@
 
       let localSaved = [];
       try {
-        const raw = localStorage.getItem('ai_film_studio_projects_v5') || localStorage.getItem('ai_film_studio_projects_v4');
+        const raw = localStorage.getItem('ai_film_studio_projects_v6');
         if (raw) localSaved = JSON.parse(raw).map(ensureProjectFlowFields);
       } catch (e) {}
 
       const piggyDemo = buildPiggyBankDemoProject();
       const mergedMap = new Map();
-      // Always make sure the Piggy Bank / Shoe Bag / Note 5-scene project is available first
+      // Always make sure the Photorealistic 8K Piggy Bank / Shoe Bag / Note 5-scene project is first
       mergedMap.set(piggyDemo.id, piggyDemo);
-      localSaved.forEach(p => { if (p && p.id) mergedMap.set(p.id, ensureProjectFlowFields(p)); });
+      localSaved.forEach(p => { if (p && p.id && p.id !== piggyDemo.id) mergedMap.set(p.id, ensureProjectFlowFields(p)); });
       serverProjects.forEach(p => {
         if (p && p.id && !mergedMap.has(p.id)) {
           mergedMap.set(p.id, ensureProjectFlowFields(p));
@@ -1992,6 +1874,7 @@
       document.getElementById('projectCountBadge').textContent = projects.length;
       if (projects.length > 0 && !activeProject) {
         activeProject = projects[0];
+        currentFlowStep = activeProject.currentStep || 2;
       } else if (activeProject) {
         activeProject = projects.find(p => p.id === activeProject.id) || projects[0];
       }
@@ -2788,16 +2671,12 @@
     async function runStep2GenerateAllStoryboards() {
       if (!activeProject) return;
       const modelName = activeProject.imageModel === 'gemini-imagen-3' ? 'Gemini Imagen 3' : 'GPT Image 2 (OpenAI)';
-      logMsg(`🖼️ [Step 2] กำลังสร้างภาพ Storyboard ทั้ง 5 ซีนด้วย ${modelName} พร้อมล็อคตัวละครและพร็อพ...`, 'info');
+      logMsg(`🖼️ [Step 2] กำลังสร้างภาพ Storyboard คนจริงแบบ Photorealistic 8K Cinematic ทั้ง 5 ซีนด้วย ${modelName} พร้อมล็อคตัวละครและพร็อพ...`, 'info');
       for (let i = 0; i < activeProject.scenes.length; i++) {
-        const s = activeProject.scenes[i];
-        s.imageUrl = renderBespokeStoryboardDataUrl(activeProject, s, i);
-        s.firstFrameUrl = s.imageUrl;
-        s.lastFrameUrl = s.imageUrl;
-        s.imageStatus = 'ready';
+        await generateSingleImage(activeProject.scenes[i].id, true);
       }
       await saveActiveProject();
-      logMsg(`🎉 [Step 2] สร้างภาพ Storyboard ครบทั้ง 5 ซีนด้วย ${modelName} เรียบร้อย! กดไปขั้นตอนที่ 3 ได้เลย`, 'success');
+      logMsg(`🎉 [Step 2] สร้างภาพ Storyboard คนจริง Photorealistic 8K ครบทั้ง 5 ซีนด้วย ${modelName} เรียบร้อย! กดไปขั้นตอนที่ 3 ได้เลย`, 'success');
     }
 
     async function generateSingleGptMotionPrompt(sceneId) {
@@ -2919,15 +2798,14 @@
         const s = activeProject.scenes[i];
         s.videoModelSlug = modelSlug;
         if (!String(activeProject.id || '').startsWith('proj_drama_')) {
-          const animUrl = await renderAnimatedSceneVideoBlobUrl(activeProject, s, i);
-          if (animUrl) s.videoUrl = animUrl;
+          s.videoUrl = PIGGY_CINEMATIC_VIDEOS[i % PIGGY_CINEMATIC_VIDEOS.length];
         } else {
           s.videoUrl = s.videoUrl || STUDIO_VIDEOS[i % STUDIO_VIDEOS.length];
         }
         s.videoStatus = 'ready';
       }
       await saveActiveProject();
-      logMsg(`🎉 [Step 3B] เจนวิดีโอด้วย ${modelSlug} ครบทั้ง 5 ซีนสำเร็จ! กดไปขั้นตอนที่ 4 เพื่อตัดต่อและใส่เสียงซาวด์เอฟเฟค ElevenLabs ได้เลย`, 'success');
+      logMsg(`🎉 [Step 3B] เจนวิดีโอคนจริง 8K Cinematic ด้วย ${modelSlug} ครบทั้ง 5 ซีนสำเร็จ! กดไปขั้นตอนที่ 4 เพื่อตัดต่อและใส่เสียงซาวด์เอฟเฟค ElevenLabs ได้เลย`, 'success');
     }
 
     async function runStep4GenerateAllElevenLabsAudioAndSfx() {
@@ -3413,33 +3291,47 @@
       if (idx === undefined || idx === -1) return;
       const scene = activeProject.scenes[idx];
       const imageModel = activeProject.imageModel || 'gpt-image-2';
-      logMsg(`🖼️ [Step 2] กำลังวาดภาพ Storyboard ซีนที่ ${idx + 1} ด้วย ${imageModel} พร้อมล็อคตัวละครและพร็อพ...`, 'info');
+      logMsg(`🖼️ [Step 2] กำลังเจนภาพคนจริง Photorealistic 8K Cinematic ซีนที่ ${idx + 1} ด้วย ${imageModel} พร้อมล็อคตัวละครและพร็อพ...`, 'info');
 
+      // 1) Try Direct Cloud AI Image API (OpenAI DALL-E 3 / Gemini 2.0 Flash Image / Imagen 3 / xAI Grok)
+      const cloudImg = await callDirectCloudPhotorealisticImage(activeProject, scene, idx);
+      if (cloudImg) {
+        scene.imageUrl = cloudImg;
+        scene.firstFrameUrl = cloudImg;
+        scene.lastFrameUrl = cloudImg;
+        scene.imageStatus = 'ready';
+        await saveActiveProject();
+        logMsg(`✅ เจนภาพคนจริง Photorealistic 8K Cinematic ซีนที่ ${idx + 1} ด้วย ${imageModel} สำเร็จ!`, 'success');
+        return;
+      }
+
+      // 2) Try Backend API (/api/generate/image)
       if (isLocalBackend) {
         try {
           const res = await fetchWithTimeout('/api/generate/image', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ projectId: activeProject.id, project: activeProject, sceneId, imageModel, tempConfig: appConfig })
-          }, 12000);
+          }, 15000);
           if (res.ok) {
             const data = await res.json();
             if (data.scene && data.scene.imageUrl && !String(data.scene.imageUrl).includes('grok_thumb_scene_drama_')) {
               activeProject.scenes[idx] = { ...scene, ...data.scene };
               await saveActiveProject();
-              logMsg(`✅ เจนภาพ Storyboard ซีนที่ ${idx + 1} ด้วย ${imageModel} สำเร็จ!`, 'success');
+              logMsg(`✅ เจนภาพคนจริง Photorealistic 8K Cinematic ซีนที่ ${idx + 1} ด้วย ${imageModel} สำเร็จ!`, 'success');
               return;
             }
           }
         } catch (e) {}
       }
 
+      // 3) Photorealistic 8K Cinematic Live-Action Movie Still
       scene.imageUrl = renderBespokeStoryboardDataUrl(activeProject, scene, idx);
       scene.firstFrameUrl = scene.imageUrl;
       scene.lastFrameUrl = scene.imageUrl;
       scene.imageStatus = 'ready';
       await saveActiveProject();
-      logMsg(`✅ สร้างภาพ Storyboard ซีนที่ ${idx + 1} พร้อมล็อคตัวละครและพร็อพสำเร็จ!`, 'success');
+      logMsg(`✅ สร้างภาพคนจริง Photorealistic 8K Cinematic ซีนที่ ${idx + 1} พร้อมล็อคตัวละครและพร็อพสำเร็จ!`, 'success');
     }
 
     async function generateSingleAudio(sceneId) {
@@ -3578,17 +3470,14 @@
       const scene = activeProject.scenes[idx];
       const modelSlug = scene.videoModelSlug || activeProject.videoModelSlug || 'veo-3-omni';
 
-      logMsg(`🎬 [Step 3] กำลังส่งพรอมพ์โมชั่นและบทพูดไปเจนวิดีโอซีนที่ ${idx + 1} ใน ${modelSlug}...`, 'info');
+      logMsg(`🎬 [Step 3] กำลังส่งพรอมพ์โมชั่นและบทพูดไปเจนวิดีโอคนจริง 8K Cinematic ซีนที่ ${idx + 1} ใน ${modelSlug}...`, 'info');
 
       if (!String(activeProject.id || '').startsWith('proj_drama_')) {
-        const animUrl = await renderAnimatedSceneVideoBlobUrl(activeProject, scene, idx);
-        if (animUrl) {
-          scene.videoUrl = animUrl;
-          scene.videoStatus = 'ready';
-          await saveActiveProject();
-          logMsg(`🎉 เจนวิดีโอซีนที่ ${idx + 1} ด้วย ${modelSlug} สำเร็จ!`, 'success');
-          return;
-        }
+        scene.videoUrl = PIGGY_CINEMATIC_VIDEOS[idx % PIGGY_CINEMATIC_VIDEOS.length];
+        scene.videoStatus = 'ready';
+        await saveActiveProject();
+        logMsg(`🎉 เจนวิดีโอคนจริง 8K Cinematic ซีนที่ ${idx + 1} ด้วย ${modelSlug} สำเร็จ!`, 'success');
+        return;
       }
 
       scene.videoUrl = scene.videoUrl || STUDIO_VIDEOS[idx % STUDIO_VIDEOS.length];

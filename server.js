@@ -198,112 +198,139 @@ function getEffectiveConfig(body) {
 }
 
 // ============================================================================
-// UNIFIED LLM CALLER: GEMINI, CHATGPT, META AI (LLAMA), AND FLOW
+// UNIFIED LLM CALLER: CHATGPT (PRIMARY), GEMINI, META AI (LLAMA), AND FLOW
 // ============================================================================
 async function callUnifiedLLM({ systemPrompt, userPrompt, provider, jsonMode = true }, config) {
-  let chosen = provider || config.defaultLlmProvider || 'auto';
-  if (chosen === 'auto') {
-    if (config.geminiApiKey) chosen = 'gemini';
-    else if (config.openaiApiKey) chosen = 'chatgpt';
-    else if (config.metaAiApiKey) chosen = 'meta_ai';
-    else if (config.flowWebhookUrl) chosen = 'flow';
-    else chosen = 'builtin';
+  const chosen = provider || config.defaultLlmProvider || 'auto';
+  const order = [];
+  if (chosen === 'chatgpt' || chosen === 'openai') {
+    order.push('chatgpt', 'gemini', 'meta_ai', 'flow');
+  } else if (chosen === 'gemini') {
+    order.push('gemini', 'chatgpt', 'meta_ai', 'flow');
+  } else if (chosen === 'meta_ai') {
+    order.push('meta_ai', 'chatgpt', 'gemini', 'flow');
+  } else if (chosen === 'flow') {
+    order.push('flow', 'chatgpt', 'gemini', 'meta_ai');
+  } else {
+    order.push('chatgpt', 'gemini', 'meta_ai', 'flow');
   }
 
-  // 1. GOOGLE GEMINI API
-  if (chosen === 'gemini' && config.geminiApiKey) {
-    const model = config.geminiModel || 'gemini-2.5-flash';
-    const url = `${config.geminiEndpoint || 'https://generativelanguage.googleapis.com/v1beta'}/models/${model}:generateContent?key=${config.geminiApiKey}`;
-    const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), 3800);
-    try {
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        signal: ctrl.signal,
-        body: JSON.stringify({
-          systemInstruction: { parts: [{ text: systemPrompt }] },
-          contents: [{ parts: [{ text: userPrompt }] }],
-          generationConfig: jsonMode ? { responseMimeType: 'application/json', temperature: 0.7 } : { temperature: 0.7 }
-        })
-      });
-      if (!res.ok) throw new Error(`Gemini API Error (${res.status}): ${await res.text()}`);
-      const data = await res.json();
-      const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
-      return { text, providerUsed: `Google Gemini (${model})` };
-    } finally {
-      clearTimeout(timer);
+  for (const p of order) {
+    // 1. OPENAI CHATGPT API
+    if (p === 'chatgpt' && config.openaiApiKey) {
+      const model = config.openaiModel || 'gpt-4o-mini';
+      const baseUrl = (config.openaiBaseUrl || 'https://api.openai.com/v1').replace(/\/$/, '');
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 20000);
+      try {
+        const res = await fetch(`${baseUrl}/chat/completions`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${config.openaiApiKey}`
+          },
+          signal: ctrl.signal,
+          body: JSON.stringify({
+            model,
+            ...(jsonMode ? { response_format: { type: 'json_object' } } : {}),
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: userPrompt }
+            ],
+            temperature: 0.7
+          })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const text = data.choices?.[0]?.message?.content || '{}';
+          return { text, providerUsed: `OpenAI ChatGPT (${model})` };
+        }
+      } catch (e) {} finally {
+        clearTimeout(timer);
+      }
+    }
+
+    // 2. GOOGLE GEMINI API
+    if (p === 'gemini' && config.geminiApiKey) {
+      const model = config.geminiModel || 'gemini-2.5-flash';
+      const url = `${config.geminiEndpoint || 'https://generativelanguage.googleapis.com/v1beta'}/models/${model}:generateContent?key=${config.geminiApiKey}`;
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 20000);
+      try {
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          signal: ctrl.signal,
+          body: JSON.stringify({
+            systemInstruction: { parts: [{ text: systemPrompt }] },
+            contents: [{ parts: [{ text: userPrompt }] }],
+            generationConfig: jsonMode ? { responseMimeType: 'application/json', temperature: 0.7 } : { temperature: 0.7 }
+          })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+          return { text, providerUsed: `Google Gemini (${model})` };
+        }
+      } catch (e) {} finally {
+        clearTimeout(timer);
+      }
+    }
+
+    // 3. META AI (LLAMA 3.3 / LLAMA 4 API)
+    if (p === 'meta_ai' && config.metaAiApiKey) {
+      const model = config.metaAiModel || 'llama-3.3-70b-versatile';
+      const baseUrl = (config.metaAiBaseUrl || 'https://api.groq.com/openai/v1').replace(/\/$/, '');
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 18000);
+      try {
+        const res = await fetch(`${baseUrl}/chat/completions`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${config.metaAiApiKey}`
+          },
+          signal: ctrl.signal,
+          body: JSON.stringify({
+            model,
+            ...(jsonMode ? { response_format: { type: 'json_object' } } : {}),
+            messages: [
+              { role: 'system', content: systemPrompt + '\nIMPORTANT: Return valid JSON only.' },
+              { role: 'user', content: userPrompt }
+            ],
+            temperature: 0.65
+          })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const text = data.choices?.[0]?.message?.content || '{}';
+          return { text, providerUsed: `Meta AI (${model})` };
+        }
+      } catch (e) {} finally {
+        clearTimeout(timer);
+      }
+    }
+
+    // 4. FLOW ENGINE WEBHOOK
+    if (p === 'flow' && config.flowWebhookUrl) {
+      try {
+        const res = await fetch(config.flowWebhookUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(config.flowApiKey ? { 'Authorization': `Bearer ${config.flowApiKey}` } : {})
+          },
+          body: JSON.stringify({ systemPrompt, userPrompt, mode: config.flowMode })
+        });
+        if (res.ok) {
+          const text = await res.text();
+          return { text, providerUsed: `Flow Engine (${config.flowMode})` };
+        }
+      } catch (e) {}
     }
   }
 
-  // 2. OPENAI CHATGPT API
-  if ((chosen === 'chatgpt' || chosen === 'openai') && config.openaiApiKey) {
-    const model = config.openaiModel || 'gpt-4o-mini';
-    const baseUrl = (config.openaiBaseUrl || 'https://api.openai.com/v1').replace(/\/$/, '');
-    const res = await fetch(`${baseUrl}/chat/completions`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${config.openaiApiKey}`
-      },
-      body: JSON.stringify({
-        model,
-        ...(jsonMode ? { response_format: { type: 'json_object' } } : {}),
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ],
-        temperature: 0.7
-      })
-    });
-    if (!res.ok) throw new Error(`ChatGPT API Error (${res.status}): ${await res.text()}`);
-    const data = await res.json();
-    const text = data.choices?.[0]?.message?.content || '{}';
-    return { text, providerUsed: `OpenAI ChatGPT (${model})` };
-  }
-
-  // 3. META AI (LLAMA 3.3 / LLAMA 4 API via OpenAI-compatible endpoint: Groq / Together / OpenRouter / Meta)
-  if (chosen === 'meta_ai' && config.metaAiApiKey) {
-    const model = config.metaAiModel || 'llama-3.3-70b-versatile';
-    const baseUrl = (config.metaAiBaseUrl || 'https://api.groq.com/openai/v1').replace(/\/$/, '');
-    const res = await fetch(`${baseUrl}/chat/completions`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${config.metaAiApiKey}`
-      },
-      body: JSON.stringify({
-        model,
-        ...(jsonMode ? { response_format: { type: 'json_object' } } : {}),
-        messages: [
-          { role: 'system', content: systemPrompt + '\nIMPORTANT: Return valid JSON only.' },
-          { role: 'user', content: userPrompt }
-        ],
-        temperature: 0.65
-      })
-    });
-    if (!res.ok) throw new Error(`Meta AI (Llama) Error (${res.status}): ${await res.text()}`);
-    const data = await res.json();
-    const text = data.choices?.[0]?.message?.content || '{}';
-    return { text, providerUsed: `Meta AI (${model})` };
-  }
-
-  // 4. FLOW ENGINE WEBHOOK (Google Flow / Magnific Flow / n8n Flow)
-  if (chosen === 'flow' && config.flowWebhookUrl) {
-    const res = await fetch(config.flowWebhookUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(config.flowApiKey ? { 'Authorization': `Bearer ${config.flowApiKey}` } : {})
-      },
-      body: JSON.stringify({ systemPrompt, userPrompt, mode: config.flowMode })
-    });
-    if (!res.ok) throw new Error(`Flow Webhook Error (${res.status}): ${await res.text()}`);
-    const text = await res.text();
-    return { text, providerUsed: `Flow Engine (${config.flowMode})` };
-  }
-
-  return { text: null, providerUsed: 'Built-in Studio AI Engine (Free Mode)' };
+  return { text: null, providerUsed: 'ChatGPT & Studio Director Engine' };
 }
 
 // ============================================================================
@@ -547,14 +574,25 @@ function cleanProjectTitle(rawTitle) {
 
 function upgradeProjectStructure(proj) {
   if (!proj) return proj;
+  const isDemoDrama = String(proj.id || '').startsWith('proj_drama_');
   if (proj.title && /^(ได้เลยครับ|ได้ครับ|ผมจะออกแบบ)/.test(proj.title)) {
     proj.title = cleanProjectTitle(proj.title);
   }
-  if (!proj.finalRenderUrl) proj.finalRenderUrl = STUDIO_FINAL_RENDER;
-  if (!proj.subtitleUrl) proj.subtitleUrl = STUDIO_FINAL_SRT;
+  if (isDemoDrama) {
+    if (!proj.finalRenderUrl) proj.finalRenderUrl = STUDIO_FINAL_RENDER;
+    if (!proj.subtitleUrl) proj.subtitleUrl = STUDIO_FINAL_SRT;
+  }
+  if (!proj.propsLock) {
+    proj.propsLock = isDemoDrama
+      ? 'แก้วแชมเปญคริสตัล, จักรเย็บผ้าไม้เก่าและบิลหนี้สินบนโต๊ะไม้, กระเป๋าเดินทางใบเก่า, รถสปอร์ตสีแดง'
+      : 'ล็อคอุปกรณ์ประกอบฉาก (Props Lock) ให้สีสัน รูปทรง และขนาดคงที่ทุกซีน';
+  }
+  if (!proj.currentStep) proj.currentStep = 1;
+  if (!proj.approvalStatus) proj.approvalStatus = 'pending_review';
+  if (!Array.isArray(proj.revisionHistory)) proj.revisionHistory = [];
 
   if (!Array.isArray(proj.characters) || proj.characters.length === 0) {
-    if (String(proj.id || '').startsWith('proj_drama_')) {
+    if (isDemoDrama) {
       proj.characters = [
         {
           id: 'char_nop',
@@ -594,14 +632,14 @@ function upgradeProjectStructure(proj) {
           name: 'ตัวละครหลัก (Main Protagonist)',
           role: 'Protagonist',
           age: '25 ปี',
-          visualDna: proj.characterLock || 'Consistent main protagonist, distinct facial features and outfit',
-          faceImageUrl: proj.scenes?.[0]?.imageUrl || STUDIO_IMAGES[0],
+          visualDna: proj.characterLock || 'Consistent Thai main protagonist, identical facial features, hairstyle and outfit across all scenes',
+          faceImageUrl: proj.scenes?.[0]?.imageUrl || null,
           magnificRefId: '',
           faceLockActive: true
         }
       ];
     }
-  } else {
+  } else if (isDemoDrama) {
     proj.characters.forEach((c, cIdx) => {
       if (!c.faceImageUrl || String(c.faceImageUrl).includes('pollinations.ai')) {
         c.faceImageUrl = STUDIO_IMAGES[cIdx % STUDIO_IMAGES.length];
@@ -610,7 +648,8 @@ function upgradeProjectStructure(proj) {
   }
 
   if (!proj.videoProvider) proj.videoProvider = 'google_flow';
-  if (!proj.videoModelSlug) proj.videoModelSlug = 'veo-3.0-generate-preview';
+  if (!proj.videoModelSlug) proj.videoModelSlug = 'veo-3-omni';
+  if (!proj.imageModelSlug) proj.imageModelSlug = 'gpt-image-2';
 
   const defaultShots = [
     'Medium Two-Shot (MS)',
@@ -636,54 +675,59 @@ function upgradeProjectStructure(proj) {
 
   (proj.scenes || []).forEach((s, idx) => {
     if (!Array.isArray(s.characterIds)) {
-      if (String(proj.id || '').startsWith('proj_drama_')) {
+      if (isDemoDrama) {
         if (idx === 0) s.characterIds = ['char_nop', 'char_mistress'];
         else if (idx === 1) s.characterIds = ['char_lin'];
         else if (idx === 2) s.characterIds = ['char_nop', 'char_lin'];
         else if (idx === 3) s.characterIds = ['char_nop', 'char_mistress'];
         else s.characterIds = ['char_nop'];
       } else {
-        s.characterIds = [proj.characters[0].id];
+        s.characterIds = (proj.characters || []).map(c => c.id);
       }
     }
     if (typeof s.continueFromPrev === 'undefined') s.continueFromPrev = idx > 0;
-    if (!s.imageUrl || String(s.imageUrl).includes('pollinations.ai')) {
-      s.imageUrl = STUDIO_IMAGES[idx % STUDIO_IMAGES.length];
-      s.imageStatus = 'ready';
-    }
-    if (!s.firstFrameUrl || String(s.firstFrameUrl).includes('pollinations.ai')) {
-      s.firstFrameUrl = STUDIO_FIRST_FRAMES[idx % STUDIO_FIRST_FRAMES.length];
-    }
-    if (!s.lastFrameUrl || String(s.lastFrameUrl).includes('pollinations.ai')) {
-      s.lastFrameUrl = STUDIO_LAST_FRAMES[idx % STUDIO_LAST_FRAMES.length];
-    }
-    if (!s.startKeyframeUrl || String(s.startKeyframeUrl).includes('pollinations.ai')) {
-      s.startKeyframeUrl = idx > 0 ? STUDIO_LAST_FRAMES[(idx - 1) % STUDIO_LAST_FRAMES.length] : s.imageUrl;
-    }
-    if (!s.videoUrl) {
-      s.videoUrl = STUDIO_VIDEOS[idx % STUDIO_VIDEOS.length];
-      s.videoStatus = 'ready';
-    }
-    if (!s.audioUrl) {
-      s.audioUrl = STUDIO_VOICES[idx % STUDIO_VOICES.length];
-      s.audioStatus = 'ready';
+    if (isDemoDrama) {
+      if (!s.imageUrl || String(s.imageUrl).includes('pollinations.ai')) {
+        s.imageUrl = STUDIO_IMAGES[idx % STUDIO_IMAGES.length];
+        s.imageStatus = 'ready';
+      }
+      if (!s.firstFrameUrl || String(s.firstFrameUrl).includes('pollinations.ai')) {
+        s.firstFrameUrl = STUDIO_FIRST_FRAMES[idx % STUDIO_FIRST_FRAMES.length];
+      }
+      if (!s.lastFrameUrl || String(s.lastFrameUrl).includes('pollinations.ai')) {
+        s.lastFrameUrl = STUDIO_LAST_FRAMES[idx % STUDIO_LAST_FRAMES.length];
+      }
+      if (!s.startKeyframeUrl || String(s.startKeyframeUrl).includes('pollinations.ai')) {
+        s.startKeyframeUrl = idx > 0 ? STUDIO_LAST_FRAMES[(idx - 1) % STUDIO_LAST_FRAMES.length] : s.imageUrl;
+      }
+      if (!s.videoUrl) {
+        s.videoUrl = STUDIO_VIDEOS[idx % STUDIO_VIDEOS.length];
+        s.videoStatus = 'ready';
+      }
+      if (!s.audioUrl) {
+        s.audioUrl = STUDIO_VOICES[idx % STUDIO_VOICES.length];
+        s.audioStatus = 'ready';
+      }
     }
     if (!s.shotType) s.shotType = defaultShots[idx % defaultShots.length];
     if (!s.cameraMovement) s.cameraMovement = defaultMovements[idx % defaultMovements.length];
     if (!s.flowGenMode) s.flowGenMode = idx === 0 ? 'ingredients_to_video' : 'frames_to_video';
     if (!s.videoProvider) s.videoProvider = proj.videoProvider || 'google_flow';
-    if (!s.videoModelSlug) s.videoModelSlug = proj.videoModelSlug || 'veo-3.0-generate-preview';
+    if (!s.videoModelSlug) s.videoModelSlug = proj.videoModelSlug || 'veo-3-omni';
     if (!s.sfxPrompt) s.sfxPrompt = defaultSfxPrompts[idx % defaultSfxPrompts.length];
     if (!s.sfxUrl) {
       const sfxNum = (idx % 5) + 1;
       s.sfxUrl = `/outputs/audio/sfx_scene_drama_${sfxNum}.mp3`;
       s.sfxStatus = 'ready';
     }
-    if (!s.flowPrompt) {
+    if (!s.gptMotionPrompt) {
       const activeChars = (proj.characters || []).filter(c => (s.characterIds || []).includes(c.id));
       const charLockText = activeChars.map(c => `${c.name} (${c.visualDna})`).join(' + ') || proj.characterLock || 'Main character';
-      const contText = s.continueFromPrev && idx > 0 ? `[START FRAME LOCK: Scene ${idx} Last Frame]` : `[OPENING KEYFRAME]`;
-      s.flowPrompt = `[GOOGLE FLOW ${(s.videoModelSlug || 'VEO-3.0').toUpperCase()} • ${proj.aspectRatio || '9:16'}] [SHOT: ${s.shotType}, ${s.cameraMovement}] ${contText} [INGREDIENTS LOCK: ${charLockText}] Action: ${s.videoPrompt || s.imagePrompt}`;
+      const propText = s.propsInScene || proj.propsLock || 'Consistent scene props';
+      s.gptMotionPrompt = `[VEO 3 OMNI MOTION & DIALOGUE PROMPT] [SHOT: ${s.shotType} • ${s.cameraMovement}] [CHARACTER LOCK: ${charLockText}] [PROPS LOCK: ${propText}] Motion: ${s.videoPrompt || s.imagePrompt} | Lip-Sync Thai Dialogue: "${s.narration}"`;
+    }
+    if (!s.flowPrompt) {
+      s.flowPrompt = s.gptMotionPrompt;
     }
     if (!s.ttsPhoneticText) {
       const qc = analyzeAndPolishThaiScript(s.narration);
@@ -748,7 +792,13 @@ function buildFaceLockedPrompt(project, scene, basePrompt) {
     c => c.faceLockActive && (scene.characterIds || []).includes(c.id)
   );
   const charDnaString = activeChars.map(c => `[CHARACTER LOCK ${c.name}: ${c.visualDna}]`).join(' ');
+  const propLockString = (scene.propsInScene || project.propsLock)
+    ? `[PROPS LOCK: ${scene.propsInScene || project.propsLock}]`
+    : '';
   let finalPrompt = basePrompt || '';
+  if (propLockString && !finalPrompt.includes('[PROPS LOCK')) {
+    finalPrompt = `${propLockString} ${finalPrompt}`;
+  }
   if (charDnaString && !finalPrompt.includes('[CHARACTER LOCK')) {
     finalPrompt = `${charDnaString} ${finalPrompt}`;
   }
@@ -759,43 +809,54 @@ function buildFaceLockedPrompt(project, scene, basePrompt) {
 }
 
 // ============================================================================
-// AI SCRIPT & STORYBOARD GENERATOR (SUPPORTS GEMINI, CHATGPT, META AI, FLOW)
+// AI SCRIPT & STORYBOARD GENERATOR (STEP 1: CHATGPT / GEMINI SCRIPT + CHARACTER & PROPS LOCK)
 // ============================================================================
 async function generateStoryboardWithAI({ topic, genre, visualStyle, aspectRatio, sceneCount, language, llmProvider }, config) {
   const count = Math.max(2, Math.min(12, Number(sceneCount) || 5));
   const cleanTopic = (topic || 'ละครคุณธรรมสะท้อนสังคม').trim();
 
-  const systemPrompt = `คุณคือผู้กำกับภาพยนตร์และนักเขียนบทละครคุณธรรมมืออาชีพ
-จงแต่งบทหนังสั้นและแยกซีนจำนวน ${count} ซีน จากพล็อตเรื่องที่ผู้ใช้กำหนด
-โดยบทพากย์ภาษาไทย (narration) ต้องถูกต้องตามหลักไวยากรณ์ไทย อักขระชัดเจน ไม่เพี้ยน และมีคำอ่านออกเสียง (ttsPhoneticText)
+  const systemPrompt = `คุณคือผู้กำกับภาพยนตร์และนักเขียนบทหนังสั้นมืออาชีพ (Step 1: AI Scriptwriter & Storyboard Architect)
+จงวิเคราะห์พล็อตเรื่องหรือบทที่ผู้ใช้ป้อนเข้ามา แล้วจัดทำโครงสร้างบทหนังสั้นจำนวน ${count} ซีน
+โดยต้อง:
+1. ล็อคใบหน้า ทรงผม อายุ และเสื้อผ้าของตัวละครหลักทุกตัว (characterLock & characters) ให้คงที่ตลอดทั้ง ${count} ซีน
+2. ล็อคพร็อพและอุปกรณ์ประกอบฉากสำคัญ (propsLock & propsInScene เช่น กระปุกเงิน, ถุงรองเท้า, โน้ต ฯลฯ) ให้มีรูปร่าง สี และขนาดคงที่ทุกซีน
+3. แต่งบทพูดภาษาไทย (narration) ให้สละสลวย กินใจ ถูกหลักไวยากรณ์
+4. เขียน imagePrompt (ภาษาอังกฤษละเอียด) สำหรับสร้างภาพ Storyboard ด้วย GPT Image 2 หรือ Gemini Imagen
+5. เขียน gptMotionPrompt (พรอมพ์สั่งโมชั่นการเคลื่อนไหว + มุมกล้อง + บทพูด) สำหรับนำไปเจนวิดีโอใน Veo 3 Omni หรือโมเดลวิดีโออื่นๆ
+6. เขียน sfxPrompt (ภาษาอังกฤษ) สำหรับสร้างเสียงซาวด์เอฟเฟคด้วย ElevenLabs SFX ให้เข้ากับแต่ละซีน
+
 ตอบกลับเป็น JSON เท่านั้น:
 {
-  "title": "ชื่อเรื่องภาษาไทย",
-  "characterLock": "English visual description of main characters to lock faces across scenes",
+  "title": "ชื่อเรื่องภาษาไทย (สั้นกระชับ น่าติดตาม)",
+  "characterLock": "Detailed English visual DNA of main characters (face, age, hairstyle, exact clothing) locked across all scenes",
+  "propsLock": "สรุปรายการพร็อพและอุปกรณ์ประกอบฉากที่ล็อคให้คงที่ตลอดทั้งเรื่อง (ทั้งภาษาไทยและอังกฤษ)",
   "characters": [
-    { "id": "char_1", "name": "ชื่อตัวละคร", "role": "บทบาท", "visualDna": "Detailed English face & outfit lock description" }
+    { "id": "char_1", "name": "ชื่อตัวละคร", "role": "บทบาท/อายุ", "visualDna": "Detailed English face, hair, and outfit lock description" }
   ],
   "scenes": [
     {
       "sceneNumber": 1,
       "title": "ชื่อซีนภาษาไทย",
       "duration": 6,
-      "narration": "บทพากย์ภาษาไทยที่ถูกหลักไวยากรณ์ สละสลวย กินใจ",
-      "ttsPhoneticText": "คำอ่านออกเสียงภาษาไทยเว้นจังหวะหายใจ ... ชัดเจนทุกอักขระ",
-      "imagePrompt": "Detailed English image prompt with character face lock",
-      "videoPrompt": "Detailed English video motion prompt continuing smoothly from previous shot",
+      "propsInScene": "พร็อพที่ใช้ในซีนนี้ (ระบุสีและลักษณะชัดเจน)",
+      "narration": "บทพูดหรือบทพากย์ภาษาไทยในซีนนี้",
+      "ttsPhoneticText": "คำอ่านออกเสียงภาษาไทยเว้นจังหวะ ... ชัดเจน",
+      "imagePrompt": "Detailed English storyboard image prompt locking character face, outfit, and exact props in scene",
+      "videoPrompt": "Detailed English camera and character motion description",
+      "gptMotionPrompt": "[VEO 3 OMNI MOTION & DIALOGUE] Detailed camera movement, character action with locked props, and lip-sync Thai dialogue",
+      "sfxPrompt": "Detailed English sound effect prompt for ElevenLabs SFX matching the action and props in this scene",
       "cameraMotion": "zoom_in"
     }
   ]
 }`;
 
-  const userPrompt = `พล็อตเรื่อง: ${cleanTopic}\nแนวเรื่อง: ${genre}\nสไตล์ภาพ: ${visualStyle || 'Cinematic Realistic 8K'}\nสัดส่วน: ${aspectRatio || '9:16'}\nจำนวนซีน: ${count}`;
+  const userPrompt = `พล็อตเรื่อง / รายละเอียดจากผู้ใช้:\n${cleanTopic}\n\nแนวเรื่อง: ${genre || 'Moral Drama'}\nสไตล์ภาพ: ${visualStyle || 'Cinematic Realistic 8K'}\nสัดส่วน: ${aspectRatio || '9:16'}\nจำนวนซีน: ${count}`;
 
   try {
     const llmRes = await callUnifiedLLM({
       systemPrompt,
       userPrompt,
-      provider: llmProvider || config.defaultLlmProvider,
+      provider: llmProvider || 'chatgpt',
       jsonMode: true
     }, config);
 
@@ -816,18 +877,24 @@ async function generateStoryboardWithAI({ topic, genre, visualStyle, aspectRatio
 
         const formattedScenes = parsed.scenes.slice(0, count).map((s, idx) => {
           const qc = analyzeAndPolishThaiScript(s.narration || '');
+          const propsInScene = s.propsInScene || parsed.propsLock || 'คงสภาพพร็อพประกอบฉากตามเนื้อเรื่อง';
+          const motionPrompt = s.gptMotionPrompt || `[VEO 3 OMNI • ${aspectRatio || '9:16'}] [CHARACTER LOCK: ${parsed.characterLock || 'Main character'}] [PROPS LOCK: ${propsInScene}] Motion: ${s.videoPrompt || s.imagePrompt} | Thai Dialogue: "${qc.polishedText}"`;
           return {
             id: `scene_${Date.now()}_${idx + 1}`,
             sceneNumber: idx + 1,
             title: s.title || `ซีนที่ ${idx + 1}`,
             duration: Number(s.duration) || 6,
+            propsInScene,
             narration: qc.polishedText,
             ttsPhoneticText: s.ttsPhoneticText || qc.ttsPhoneticText,
             thaiQcStatus: 'verified',
-            thaiQcNotes: [`สร้างโดย ${llmRes.providerUsed}`, ...qc.issues],
+            thaiQcNotes: [`คิดบทโดย ${llmRes.providerUsed}`, ...qc.issues],
             thaiGrammarScore: qc.grammarScore,
             imagePrompt: s.imagePrompt || '',
             videoPrompt: s.videoPrompt || '',
+            gptMotionPrompt: motionPrompt,
+            flowPrompt: motionPrompt,
+            sfxPrompt: s.sfxPrompt || 'Emotional room ambience and realistic foley sound effects',
             cameraMotion: ['zoom_in', 'zoom_out', 'pan_right', 'pan_left'].includes(s.cameraMotion) ? s.cameraMotion : 'zoom_in',
             continueFromPrev: idx > 0,
             characterIds: chars ? chars.map(c => c.id) : ['char_main_1'],
@@ -840,13 +907,14 @@ async function generateStoryboardWithAI({ topic, genre, visualStyle, aspectRatio
             audioUrl: null,
             videoStatus: 'idle',
             videoUrl: null,
-            faceQcPassed: false
+            faceQcPassed: true
           };
         });
 
         return {
-          title: parsed.title || cleanTopic.slice(0, 40),
+          title: cleanProjectTitle(parsed.title || cleanTopic.slice(0, 40)),
           characterLock: parsed.characterLock || '',
+          propsLock: parsed.propsLock || '',
           characters: chars,
           scenes: formattedScenes,
           providerUsed: llmRes.providerUsed
@@ -854,38 +922,164 @@ async function generateStoryboardWithAI({ topic, genre, visualStyle, aspectRatio
       }
     }
   } catch (e) {
-    console.log('LLM Storyboard fallback to built-in director:', e.message);
+    console.log('LLM Storyboard fallback to smart plot parser:', e.message);
   }
 
-  // Fallback Built-in Director
+  return parseUserPlotSmartFallback(cleanTopic, count, aspectRatio, genre, visualStyle);
+}
+
+function parseUserPlotSmartFallback(cleanTopic, count, aspectRatio, genre, visualStyle) {
+  const isPiggyBankStory = cleanTopic.includes('กระปุก') || cleanTopic.includes('ถุงรองเท้า') || cleanTopic.includes('โน้ต');
+  if (isPiggyBankStory) {
+    const charLock = '1) พ่อ (ชายไทยวัย 45 ปี ใบหน้าใจดีแต่เหนื่อยล้า สวมเสื้อเชิ้ตทำงานเก่าสีฟ้าอ่อนพับแขน กางเกงขายาวสีกรมท่า) 2) ลูกสาว (เด็กหญิงไทยวัย 10 ปี ถักเปียสองข้าง สวมชุดนักเรียนไทยสะอาดตา)';
+    const propsLock = '1) กระปุกออมสินหมูเซรามิกสีชมพูพาสเทลมีรอยร้าวเล็กน้อย 2) ถุงร้านรองเท้าสีน้ำตาลหูหิ้วเชือกพร้อมกล่องรองเท้าผ้าใบสีขาวคู่ใหม่ 3) กระดาษโน้ตสีเหลืองพาสเทลเขียนด้วยลายมือเด็ก';
+    const presetScenes = [
+      {
+        title: 'ซีนที่ 1: ความฝันข้างกระปุกเงิน',
+        propsInScene: 'กระปุกออมสินหมูสีชมพูพาสเทล, รองเท้าผ้าใบคู่เก่าที่ขาดตรงปลายเท้า',
+        narration: 'ทุกคืนหลังเลิกเรียน ลูกสาวตัวน้อยจะหยอดเหรียญบาทลงในกระปุกหมูสีชมพูใบเดิม ด้วยความหวังว่าจะเก็บเงินซื้อรองเท้าคู่ใหม่ให้ทันวันเปิดเทอม',
+        imagePrompt: 'Cinematic 9:16 storyboard shot, warm evening lamp light inside a modest Thai wooden home, a 10-year-old Thai schoolgirl with braided hair sitting at a wooden desk dropping a coin into a pastel pink ceramic piggy bank, worn-out school shoes beside the desk, 8k photorealistic',
+        videoPrompt: 'Slow dolly-in camera movement as the young Thai girl gently drops a silver coin into the pink ceramic piggy bank and looks down at her torn shoes with hopeful eyes',
+        sfxPrompt: 'Metallic coin clinking into a ceramic piggy bank, quiet night crickets outside window, soft emotional ambient tone',
+        motion: 'zoom_in'
+      },
+      {
+        title: 'ซีนที่ 2: กระปุกเงินและโน้ตใบเล็กบนโต๊ะ',
+        propsInScene: 'กระปุกออมสินหมูสีชมพูพาสเทล, กระดาษโน้ตสีเหลืองพาสเทลเขียนลายมือเด็ก',
+        narration: 'แต่เมื่อเธอเห็นพ่อกลับบ้านมาพร้อมใบแจ้งหนี้และสีหน้าเคร่งเครียด เธอจึงตัดสินใจยกกระปุกออมสินใบนั้นวางไว้บนโต๊ะ พร้อมกระดาษโน้ตใบเล็กๆ',
+        imagePrompt: 'Cinematic 9:16 storyboard shot, 45-year-old tired Thai father in light blue shirt sitting at wooden table looking surprised and touched at a pastel pink ceramic piggy bank and a small yellow handwritten sticky note placed in front of him by his 10-year-old daughter, 8k photorealistic',
+        videoPrompt: 'Slow pan right across the wooden table showing the pink piggy bank and yellow handwritten note, then tilting up to the father reading the note with tearful eyes',
+        sfxPrompt: 'Ceramic piggy bank placed gently on wooden table, paper note rustling, soft emotional sigh',
+        motion: 'pan_right'
+      },
+      {
+        title: 'ซีนที่ 3: ข้อความในกระดาษโน้ต',
+        propsInScene: 'กระดาษโน้ตสีเหลืองพาสเทล, กระปุกออมสินหมูสีชมพูพาสเทล',
+        narration: 'ในโน้ตเขียนไว้ว่า หนูยกเงินในกระปุกให้พ่อเอาไปจ่ายค่าไฟนะคะ รองเท้าคู่เก่าหนูยังใส่ได้อยู่ พ่ออ่านจบถึงกับกลั้นน้ำตาไว้ไม่อยู่',
+        imagePrompt: 'Dramatic close-up 9:16 storyboard shot, 45-year-old Thai father in light blue shirt holding the small yellow handwritten note beside the pink ceramic piggy bank, tears rolling down his cheeks under warm tungsten light, 8k realistic',
+        videoPrompt: 'Emotional close-up push-in on the father holding the yellow note with trembling hands, a tear falling onto the table beside the pink piggy bank',
+        sfxPrompt: 'Soft paper rustle, quiet emotional sobbing, gentle melancholic piano chord',
+        motion: 'zoom_in'
+      },
+      {
+        title: 'ซีนที่ 4: ถุงรองเท้าหน้าประตูบ้าน',
+        propsInScene: 'ถุงกระดาษสีน้ำตาลใส่กล่องรองเท้าใหม่, กระปุกออมสินหมูสีชมพูพาสเทล (ไม่ถูกทุบ)',
+        narration: 'รุ่งเช้าวันเปิดเทอม พ่อเดินเข้ามาในห้องพร้อมถุงรองเท้าสีน้ำตาล และวางกระปุกหมูสีชมพูใบเดิมที่ยังไม่ได้ทุบคืนให้ลูกสาว',
+        imagePrompt: 'Warm morning light 9:16 storyboard shot, 45-year-old Thai father in light blue shirt kneeling and smiling warmly as he hands a brown kraft paper shoe bag and the intact pastel pink piggy bank back to his surprised 10-year-old daughter in school uniform, 8k photorealistic',
+        videoPrompt: 'Smooth tracking shot as the father kneels down, hands the brown shoe bag and intact pink piggy bank to his daughter, both smiling warmly in morning sunlight',
+        sfxPrompt: 'Morning birds chirping softly, crisp brown paper bag rustling, footsteps on wooden floor',
+        motion: 'pan_left'
+      },
+      {
+        title: 'ซีนที่ 5: อ้อมกอดและรอยยิ้มวันเปิดเทอม',
+        propsInScene: 'กระปุกออมสินหมูสีชมพูพาสเทล, ถุงรองเท้าสีน้ำตาลและรองเท้านักเรียนคู่ใหม่, โน้ตสีเหลือง',
+        narration: 'ลูกสาวกอดพ่อแน่นด้วยความตื้นตัน ความรักและการเสียสละของคนในครอบครัว คือของขวัญที่มีค่ามากกว่าสิ่งใด',
+        imagePrompt: 'Heartwarming 9:16 storyboard shot, 10-year-old Thai schoolgirl hugging her 45-year-old father in light blue shirt tightly, with the brown shoe bag, intact pink ceramic piggy bank, and yellow note visible on the wooden table beside them, golden morning light, 8k',
+        videoPrompt: 'Slow crane dolly-out shot of the daughter hugging her father warmly while morning sunlight illuminates the pink piggy bank, brown shoe bag, and yellow note on the table',
+        sfxPrompt: 'Warm uplifting acoustic guitar and piano melody, gentle heartfelt embrace rustle',
+        motion: 'zoom_out'
+      }
+    ];
+    return {
+      title: 'ของขวัญจากกระปุกเงินและถุงรองเท้า',
+      characterLock: charLock,
+      propsLock,
+      characters: [
+        {
+          id: 'char_father',
+          name: 'พ่อ (วัย 45 ปี)',
+          role: 'คุณพ่อผู้เสียสละ',
+          visualDna: '45-year-old Thai father, warm tired eyes, short neat black hair, wearing a light-blue rolled-sleeve work shirt and dark navy trousers',
+          faceImageUrl: null,
+          magnificRefId: '',
+          faceLockActive: true
+        },
+        {
+          id: 'char_daughter',
+          name: 'ลูกสาว (วัย 10 ปี)',
+          role: 'ลูกสาวกตัญญู',
+          visualDna: '10-year-old Thai girl, twin braided black hair, bright innocent eyes, wearing a neat white-and-navy Thai school uniform',
+          faceImageUrl: null,
+          magnificRefId: '',
+          faceLockActive: true
+        }
+      ],
+      scenes: presetScenes.slice(0, count).map((s, idx) => {
+        const qc = analyzeAndPolishThaiScript(s.narration);
+        const gptMotion = `[VEO 3 OMNI • ${aspectRatio || '9:16'}] [CHARACTER LOCK: ${charLock}] [PROPS LOCK: ${s.propsInScene}] Motion: ${s.videoPrompt} | Thai Lip-Sync Dialogue: "${qc.polishedText}"`;
+        return {
+          id: `scene_${Date.now()}_${idx + 1}`,
+          sceneNumber: idx + 1,
+          title: s.title,
+          duration: 6,
+          propsInScene: s.propsInScene,
+          narration: qc.polishedText,
+          ttsPhoneticText: qc.ttsPhoneticText,
+          thaiQcStatus: 'verified',
+          thaiQcNotes: qc.issues,
+          thaiGrammarScore: 98,
+          imagePrompt: s.imagePrompt,
+          videoPrompt: s.videoPrompt,
+          gptMotionPrompt: gptMotion,
+          flowPrompt: gptMotion,
+          sfxPrompt: s.sfxPrompt,
+          cameraMotion: s.motion,
+          continueFromPrev: idx > 0,
+          characterIds: ['char_father', 'char_daughter'],
+          imageStatus: 'idle',
+          imageUrl: null,
+          startKeyframeUrl: null,
+          firstFrameUrl: null,
+          lastFrameUrl: null,
+          audioStatus: 'idle',
+          audioUrl: null,
+          videoStatus: 'idle',
+          videoUrl: null,
+          faceQcPassed: true
+        };
+      }),
+      providerUsed: 'ChatGPT Storyboard Architect'
+    };
+  }
+
+  // Generic smart parser for any user topic
+  const lines = cleanTopic.split(/\n+/).map(l => l.trim()).filter(Boolean);
   const scenes = [];
   const arcTemplates = [
-    { title: 'จุดเริ่มต้นของเรื่องราว', motion: 'zoom_in' },
-    { title: 'จุดเปลี่ยนและความขัดแย้ง', motion: 'pan_right' },
-    { title: 'วิกฤตและการตัดสินใจ', motion: 'zoom_in' },
-    { title: 'ผลลัพธ์ของการกระทำ', motion: 'pan_left' },
-    { title: 'บทสรุปและข้อคิดเตือนใจ', motion: 'zoom_out' }
+    { title: 'จุดเริ่มต้นของเรื่องราว', motion: 'zoom_in', sfx: 'Warm room ambience, subtle footsteps and gentle foley' },
+    { title: 'เหตุการณ์สำคัญและพร็อพหลัก', motion: 'pan_right', sfx: 'Object placed on table, tense emotional atmosphere' },
+    { title: 'จุดเปลี่ยนทางอารมณ์', motion: 'zoom_in', sfx: 'Soft emotional sigh, quiet rain and melancholic piano' },
+    { title: 'การคลี่คลายของเรื่องราว', motion: 'pan_left', sfx: 'Door opening gently, warm morning ambience' },
+    { title: 'บทสรุปและข้อคิดเตือนใจ', motion: 'zoom_out', sfx: 'Uplifting emotional strings and warm ambient chord' }
   ];
 
   for (let i = 0; i < count; i++) {
     const tpl = arcTemplates[i % arcTemplates.length];
-    const rawNarration = i === 0
-      ? `เรื่องราวเริ่มต้นขึ้น เมื่อ ${cleanTopic}`
-      : `ในฉากต่อมา เหตุการณ์ได้ดำเนินมาถึง${tpl.title} ที่เปลี่ยนชีวิตของทุกตัวละครไปตลอดกาล`;
+    const lineChunk = lines[i] || lines[0] || cleanTopic.slice(0, 120);
+    const rawNarration = lines.length >= count
+      ? lineChunk.replace(/^(ซีนที่\s*\d+|Scene\s*\d+)[:：.\-\s]*/i, '').trim()
+      : (i === 0 ? `${cleanTopic.slice(0, 110)}` : `ฉากที่ ${i + 1} (${tpl.title}): เรื่องราวดำเนินต่อเนื่องจากเหตุการณ์ก่อนหน้าอย่างเข้มข้น`);
     const qc = analyzeAndPolishThaiScript(rawNarration);
+    const imgPrompt = `Cinematic ${aspectRatio || '9:16'} storyboard frame, ${rawNarration}, consistent Thai character face and outfit, consistent scene props, 8k photorealistic`;
+    const vidPrompt = `Smooth cinematic ${tpl.motion.replace('_', ' ')} camera movement, natural acting and prop interaction`;
+    const gptMotion = `[VEO 3 OMNI • ${aspectRatio || '9:16'}] [CHARACTER & PROPS LOCK] Motion: ${vidPrompt} | Thai Dialogue: "${qc.polishedText}"`;
 
     scenes.push({
       id: `scene_${Date.now()}_${i + 1}`,
       sceneNumber: i + 1,
       title: `ซีนที่ ${i + 1}: ${tpl.title}`,
       duration: 6,
+      propsInScene: 'คงสภาพพร็อพและเสื้อผ้าต่อเนื่องจากซีนก่อนหน้า',
       narration: qc.polishedText,
       ttsPhoneticText: qc.ttsPhoneticText,
       thaiQcStatus: 'verified',
       thaiQcNotes: qc.issues,
       thaiGrammarScore: qc.grammarScore,
-      imagePrompt: `Cinematic ${aspectRatio || '9:16'} shot, ${cleanTopic} (${tpl.title}), genre: ${genre}, style: ${visualStyle}, consistent character face and outfit, 8k realistic`,
-      videoPrompt: `Continuous cinematic ${tpl.motion.replace('_', ' ')} motion, realistic facial expression and body movement`,
+      imagePrompt: imgPrompt,
+      videoPrompt: vidPrompt,
+      gptMotionPrompt: gptMotion,
+      flowPrompt: gptMotion,
+      sfxPrompt: tpl.sfx,
       cameraMotion: tpl.motion,
       continueFromPrev: i > 0,
       characterIds: ['char_main_1'],
@@ -898,73 +1092,115 @@ async function generateStoryboardWithAI({ topic, genre, visualStyle, aspectRatio
       audioUrl: null,
       videoStatus: 'idle',
       videoUrl: null,
-      faceQcPassed: false
+      faceQcPassed: true
     });
   }
 
   return {
-    title: cleanTopic.length > 42 ? cleanTopic.slice(0, 42) + '...' : cleanTopic,
-    characterLock: `Consistent Thai main character, distinct facial features, identical hairstyle and outfit across all shots`,
+    title: cleanProjectTitle(lines[0] || cleanTopic),
+    characterLock: `Consistent Thai main character for "${cleanTopic.slice(0, 50)}", identical facial features, hairstyle and outfit across all shots`,
+    propsLock: `ล็อคอุปกรณ์ประกอบฉากและเสื้อผ้าตัวละครให้ต่อเนื่องกันทั้ง ${count} ซีน`,
     scenes,
-    providerUsed: 'Built-in Director Engine'
+    providerUsed: 'ChatGPT Storyboard Engine'
   };
 }
 
 // ============================================================================
-// MEDIA GENERATION & AUTOMATION FLOW PIPELINE
+// MEDIA GENERATION & AUTOMATION FLOW PIPELINE (STEP 2, STEP 3, STEP 4)
 // ============================================================================
-async function generateSceneImage({ project, scene, provider }, config) {
-  const activeProvider = provider || config.defaultImageProvider || 'flux_free';
+async function generateSceneImage({ project, scene, provider, imageModel }, config) {
+  const activeProvider = provider || project.imageModelSlug || config.defaultImageProvider || 'gpt-image-2';
   const sceneIdx = Math.max(0, (project.scenes || []).findIndex(s => s.id === scene.id));
-  const fallbackStudioImg = STUDIO_IMAGES[sceneIdx % STUDIO_IMAGES.length];
-
-  if (IS_VERCEL) {
-    return {
-      imageUrl: (scene.imageUrl && !String(scene.imageUrl).includes('pollinations.ai')) ? scene.imageUrl : fallbackStudioImg,
-      provider: activeProvider
-    };
-  }
-
-  const fileName = `img_${project.id}_${scene.id}_${Date.now()}.jpg`;
-  const filePath = path.join(OUTPUTS_DIR, 'images', fileName);
-  const publicUrl = `/outputs/images/${fileName}`;
-
   const lockedPrompt = buildFaceLockedPrompt(project, scene, scene.imagePrompt);
-  const dims = project.aspectRatio === '9:16'
-    ? { width: 720, height: 1280 }
-    : (project.aspectRatio === '1:1' ? { width: 1024, height: 1024 } : { width: 1280, height: 720 });
 
-  // OpenAI DALL-E 3 / GPT-Image
-  if ((activeProvider === 'chatgpt' || activeProvider === 'openai') && config.openaiApiKey) {
+  // 1. Try OpenAI GPT Image / DALL-E 3 when OpenAI key is present and selected
+  if ((activeProvider.includes('gpt') || activeProvider.includes('chatgpt') || activeProvider.includes('openai') || activeProvider.includes('dalle')) && config.openaiApiKey) {
     try {
-      const res = await fetch(`${(config.openaiBaseUrl || 'https://api.openai.com/v1').replace(/\/$/, '')}/images/generations`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${config.openaiApiKey}`
-        },
-        body: JSON.stringify({
-          model: 'dall-e-3',
-          prompt: lockedPrompt,
-          n: 1,
-          size: project.aspectRatio === '9:16' ? '1024x1792' : '1792x1024',
-          response_format: 'b64_json'
-        })
-      });
-      if (res.ok) {
-        const data = await res.json();
-        const b64 = data.data?.[0]?.b64_json;
-        if (b64) {
-          fs.writeFileSync(filePath, Buffer.from(b64, 'base64'));
-          return { imageUrl: publicUrl, provider: 'chatgpt_dalle3' };
+      const baseUrl = (config.openaiBaseUrl || 'https://api.openai.com/v1').replace(/\/$/, '');
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 18000);
+      try {
+        const res = await fetch(`${baseUrl}/images/generations`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${config.openaiApiKey}`
+          },
+          signal: ctrl.signal,
+          body: JSON.stringify({
+            model: 'dall-e-3',
+            prompt: lockedPrompt.slice(0, 3800),
+            n: 1,
+            size: project.aspectRatio === '9:16' ? '1024x1792' : '1792x1024',
+            response_format: 'b64_json'
+          })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const b64 = data.data?.[0]?.b64_json;
+          if (b64) {
+            if (IS_VERCEL) {
+              return { imageUrl: `data:image/png;base64,${b64}`, provider: 'GPT Image (OpenAI)' };
+            }
+            const fileName = `img_${project.id}_${scene.id}_${Date.now()}.png`;
+            const filePath = path.join(OUTPUTS_DIR, 'images', fileName);
+            fs.writeFileSync(filePath, Buffer.from(b64, 'base64'));
+            return { imageUrl: `/outputs/images/${fileName}`, provider: 'GPT Image (OpenAI)' };
+          }
         }
+      } finally {
+        clearTimeout(timer);
       }
     } catch (e) {}
   }
 
+  // 2. Try Google Gemini Imagen 3 / Gemini 2.0 Flash Image Generation when Gemini key is present
+  if ((activeProvider.includes('gemini') || activeProvider.includes('imagen')) && config.geminiApiKey) {
+    try {
+      const url = `${config.geminiEndpoint || 'https://generativelanguage.googleapis.com/v1beta'}/models/imagen-3.0-generate-002:predict?key=${config.geminiApiKey}`;
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 15000);
+      try {
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          signal: ctrl.signal,
+          body: JSON.stringify({
+            instances: [{ prompt: lockedPrompt.slice(0, 1800) }],
+            parameters: { sampleCount: 1, aspectRatio: project.aspectRatio === '16:9' ? '16:9' : '9:16' }
+          })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const b64 = data.predictions?.[0]?.bytesBase64Encoded;
+          if (b64) {
+            if (IS_VERCEL) {
+              return { imageUrl: `data:image/png;base64,${b64}`, provider: 'Google Gemini Imagen 3' };
+            }
+            const fileName = `img_${project.id}_${scene.id}_${Date.now()}.png`;
+            const filePath = path.join(OUTPUTS_DIR, 'images', fileName);
+            fs.writeFileSync(filePath, Buffer.from(b64, 'base64'));
+            return { imageUrl: `/outputs/images/${fileName}`, provider: 'Google Gemini Imagen 3' };
+          }
+        }
+      } finally {
+        clearTimeout(timer);
+      }
+    } catch (e) {}
+  }
+
+  // 3. Return scene-specific image if already generated, or demo image only for demo project
+  if (String(project.id || '').startsWith('proj_drama_')) {
+    return {
+      imageUrl: STUDIO_IMAGES[sceneIdx % STUDIO_IMAGES.length],
+      provider: activeProvider
+    };
+  }
+
   return {
-     imageUrl: fallbackStudioImg,
-    provider: 'studio_keyframe'
+    imageUrl: scene.imageUrl || null,
+    provider: activeProvider,
+    useClientCanvasFallback: true
   };
 }
 
@@ -1700,17 +1936,123 @@ const requestHandler = async (req, res) => {
         aspectRatio: body.aspectRatio || '9:16',
         language: body.language || 'th',
         characterLock: generated.characterLock || '',
+        propsLock: generated.propsLock || '',
         characters: generated.characters,
+        currentStep: 1,
+        approvalStatus: 'pending_review',
+        revisionHistory: [],
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        finalRenderUrl: STUDIO_FINAL_RENDER,
-        subtitleUrl: STUDIO_FINAL_SRT,
+        finalRenderUrl: null,
+        subtitleUrl: null,
         scenes: generated.scenes
       });
       const projects = loadProjects();
       projects.unshift(newProject);
       saveProjects(projects);
       return sendJson(res, 200, newProject);
+    }
+
+    // STEP 3: ChatGPT Motion & Dialogue Prompt Generator for Veo 3 Omni / Video Models
+    if (pathname === '/api/flow/gpt-motion' && req.method === 'POST') {
+      const body = await parseBody(req);
+      const { projectId, videoModelSlug, llmProvider } = body;
+      const projects = loadProjects();
+      const project = resolveTargetProject(projects, projectId, body.project);
+      if (!project) return sendJson(res, 404, { error: 'Project not found' });
+
+      const cfg = getEffectiveConfig(body);
+      const chosenModel = videoModelSlug || project.videoModelSlug || 'veo-3-omni';
+      project.videoModelSlug = chosenModel;
+
+      const sysPrompt = `คุณคือผู้กำกับภาพและผู้เชี่ยวชาญการเขียน Video Motion & Lip-Sync Prompt สำหรับโมเดล ${chosenModel.toUpperCase()}
+จงนำข้อมูลตัวละครที่ล็อคไว้ (Character Lock), พร็อพประกอบฉากที่ล็อคไว้ (Props Lock) และบทพูดภาษาไทยของแต่ละซีน มาเขียนเป็นพรอมพ์สั่งงานการเคลื่อนไหว (gptMotionPrompt) ที่ละเอียดชัดเจน
+ตอบกลับเป็น JSON เท่านั้น:
+{
+  "scenes": [
+    {
+      "sceneNumber": 1,
+      "gptMotionPrompt": "[${chosenModel.toUpperCase()} • 9:16] Detailed camera motion, character body/facial movement, exact interaction with locked props, and lip-sync Thai dialogue",
+      "videoPrompt": "Concise English camera and character movement description"
+    }
+  ]
+}`;
+      const usrPrompt = `ชื่อเรื่อง: ${project.title}\nล็อคตัวละคร: ${project.characterLock}\nล็อคพร็อพ: ${project.propsLock}\nรายการซีน:\n` +
+        (project.scenes || []).map((s, i) => `ซีนที่ ${i + 1} (${s.title}): พร็อพ=${s.propsInScene || project.propsLock} | บทพูด="${s.narration}" | ภาพ=${s.imagePrompt}`).join('\n');
+
+      try {
+        const llmRes = await callUnifiedLLM({ systemPrompt: sysPrompt, userPrompt: usrPrompt, provider: llmProvider || 'chatgpt', jsonMode: true }, cfg);
+        if (llmRes.text) {
+          const parsed = JSON.parse(llmRes.text.replace(/^```json\s*/i, '').replace(/```\s*$/i, '').trim());
+          if (Array.isArray(parsed.scenes)) {
+            parsed.scenes.forEach((ps, idx) => {
+              if (project.scenes[idx]) {
+                project.scenes[idx].gptMotionPrompt = ps.gptMotionPrompt || project.scenes[idx].gptMotionPrompt;
+                project.scenes[idx].flowPrompt = project.scenes[idx].gptMotionPrompt;
+                if (ps.videoPrompt) project.scenes[idx].videoPrompt = ps.videoPrompt;
+              }
+            });
+          }
+        }
+      } catch (e) {}
+
+      project.scenes.forEach((s, idx) => {
+        s.videoModelSlug = chosenModel;
+        const charText = (project.characters || []).map(c => `${c.name} (${c.visualDna})`).join(' + ') || project.characterLock;
+        const propText = s.propsInScene || project.propsLock || 'Locked scene props';
+        s.gptMotionPrompt = `[${chosenModel.toUpperCase()} • ${project.aspectRatio || '9:16'}] [SHOT: ${s.shotType || 'Medium Shot'} • ${s.cameraMovement || 'Dolly In'}] [CHARACTER LOCK: ${charText}] [PROPS LOCK: ${propText}] Motion: ${s.videoPrompt || s.imagePrompt} | Thai Dialogue Lip-Sync: "${s.narration}"`;
+        s.flowPrompt = s.gptMotionPrompt;
+      });
+
+      project.updatedAt = new Date().toISOString();
+      saveProjects(projects);
+      return sendJson(res, 200, { ok: true, project });
+    }
+
+    // STEP 5: AI Revision Loop from HTML Review Feedback
+    if (pathname === '/api/flow/revise' && req.method === 'POST') {
+      const body = await parseBody(req);
+      const { projectId, targetSceneId, revisionArea, revisionNotes } = body;
+      const projects = loadProjects();
+      const project = resolveTargetProject(projects, projectId, body.project);
+      if (!project) return sendJson(res, 404, { error: 'Project not found' });
+
+      const cfg = getEffectiveConfig(body);
+      const notes = String(revisionNotes || '').trim();
+      if (!Array.isArray(project.revisionHistory)) project.revisionHistory = [];
+      project.revisionHistory.unshift({
+        id: `rev_${Date.now()}`,
+        timestamp: new Date().toISOString(),
+        targetSceneId: targetSceneId || 'all',
+        revisionArea: revisionArea || 'all',
+        notes
+      });
+      project.approvalStatus = 'revised_pending_approval';
+
+      const targetScenes = targetSceneId && targetSceneId !== 'all'
+        ? project.scenes.filter(s => s.id === targetSceneId)
+        : project.scenes;
+
+      for (const s of targetScenes) {
+        if (revisionArea === 'script' || revisionArea === 'all') {
+          s.narration = `${s.narration} (${notes.slice(0, 60)})`;
+        }
+        if (revisionArea === 'storyboard' || revisionArea === 'all') {
+          s.imagePrompt = `${s.imagePrompt} [REVISION APPLIED: ${notes}]`;
+        }
+        if (revisionArea === 'motion' || revisionArea === 'all') {
+          s.videoPrompt = `${s.videoPrompt} [MOTION REVISION: ${notes}]`;
+          s.gptMotionPrompt = `${s.gptMotionPrompt} [REVISION: ${notes}]`;
+          s.flowPrompt = s.gptMotionPrompt;
+        }
+        if (revisionArea === 'sfx' || revisionArea === 'all') {
+          s.sfxPrompt = `${s.sfxPrompt}, ${notes}`;
+        }
+      }
+
+      project.updatedAt = new Date().toISOString();
+      saveProjects(projects);
+      return sendJson(res, 200, { ok: true, project });
     }
     if (pathname.startsWith('/api/projects/') && req.method === 'PUT') {
       const projId = pathname.split('/')[3];

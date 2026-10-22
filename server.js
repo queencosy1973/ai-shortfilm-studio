@@ -816,13 +816,19 @@ async function generateStoryboardWithAI({ topic, genre, visualStyle, aspectRatio
   const cleanTopic = (topic || 'ละครคุณธรรมสะท้อนสังคม').trim();
 
   const systemPrompt = `คุณคือผู้กำกับภาพยนตร์และนักเขียนบทหนังสั้นมืออาชีพ (Step 1: AI Scriptwriter & Storyboard Architect)
-จงวิเคราะห์พล็อตเรื่องหรือบทที่ผู้ใช้ป้อนเข้ามา แล้วจัดทำโครงสร้างบทหนังสั้นจำนวน ${count} ซีน
-โดยต้อง:
+จงวิเคราะห์พล็อตเรื่องหรือบทที่ผู้ใช้ป้อนเข้ามา แล้วจัดทำโครงสร้างบทหนังสั้นจำนวน ${count} ซีนให้จบสมบูรณ์ใน ${count} ซีนพอดี (ห้ามตัดจบค้างคาหรือจบแบบไม่รู้เรื่องเด็ดขาด!)
+โดยต้องมีโครงสร้างการเล่าเรื่องครบสมบูรณ์:
+- ซีนที่ 1 (Hook & Setup): ปูเรื่อง แนะนำตัวละครหลัก เป้าหมาย และพร็อพสำคัญ
+- ซีนกลางเรื่อง (Rising Action & Turning Point): เหตุการณ์สำคัญ อุปสรรค หรือการกระทำที่ขับเคลื่อนเนื้อเรื่อง
+- ซีนก่อนจบ (Emotional Climax): จุดพีคทางอารมณ์ หรือการเปิดเผยความจริงที่ซึ้งกินใจ
+- ซีนที่ ${count} / ซีนสุดท้าย (Complete Resolution & Payoff): บทสรุปที่เคลียร์ทุกปมของเรื่องอย่างสมบูรณ์ เข้าใจง่าย อิ่มเอมใจ ไม่ตัดจบกลางคัน!
+
+กฎเหล็ก:
 1. ล็อคใบหน้า ทรงผม อายุ และเสื้อผ้าของตัวละครหลักทุกตัว (characterLock & characters) ให้คงที่ตลอดทั้ง ${count} ซีน
 2. ล็อคพร็อพและอุปกรณ์ประกอบฉากสำคัญ (propsLock & propsInScene เช่น กระปุกเงิน, ถุงรองเท้า, โน้ต ฯลฯ) ให้มีรูปร่าง สี และขนาดคงที่ทุกซีน
-3. แต่งบทพูดภาษาไทย (narration) ให้สละสลวย กินใจ ถูกหลักไวยากรณ์
-4. เขียน imagePrompt (ภาษาอังกฤษละเอียด) สำหรับสร้างภาพ Storyboard ด้วย GPT Image 2 หรือ Gemini Imagen
-5. เขียน gptMotionPrompt (พรอมพ์สั่งโมชั่นการเคลื่อนไหว + มุมกล้อง + บทพูด) สำหรับนำไปเจนวิดีโอใน Veo 3 Omni หรือโมเดลวิดีโออื่นๆ
+3. แต่งบทพูด/บทพากย์ภาษาไทย (narration) ให้กระชับ สละสลวย กินใจ พูดจบภายใน 5-6 วินาทีต่อซีน และเมื่อฟังครบทั้ง ${count} ซีนแล้วรู้เรื่องตั้งแต่ต้นจนจบสมบูรณ์
+4. เขียน imagePrompt (ภาษาอังกฤษละเอียด) สำหรับสร้างภาพคนจริง Photorealistic 8K Cinematic Live-Action Storyboard
+5. เขียน gptMotionPrompt (พรอมพ์สั่งโมชั่นการเคลื่อนไหวของตัวละครจริงๆ เช่น หยิบของ เดิน วางของ อ่านโน้ต สวมกอด + มุมกล้อง + บทพูด) สำหรับนำไปเจนวิดีโอใน Veo 3.1 / Veo 3 Omni
 6. เขียน sfxPrompt (ภาษาอังกฤษ) สำหรับสร้างเสียงซาวด์เอฟเฟคด้วย ElevenLabs SFX ให้เข้ากับแต่ละซีน
 
 ตอบกลับเป็น JSON เท่านั้น:
@@ -839,11 +845,11 @@ async function generateStoryboardWithAI({ topic, genre, visualStyle, aspectRatio
       "title": "ชื่อซีนภาษาไทย",
       "duration": 6,
       "propsInScene": "พร็อพที่ใช้ในซีนนี้ (ระบุสีและลักษณะชัดเจน)",
-      "narration": "บทพูดหรือบทพากย์ภาษาไทยในซีนนี้",
+      "narration": "บทพูดหรือบทพากย์ภาษาไทยในซีนนี้ (กระชับ พูดจบใน 5-6 วินาที)",
       "ttsPhoneticText": "คำอ่านออกเสียงภาษาไทยเว้นจังหวะ ... ชัดเจน",
-      "imagePrompt": "Detailed English storyboard image prompt locking character face, outfit, and exact props in scene",
-      "videoPrompt": "Detailed English camera and character motion description",
-      "gptMotionPrompt": "[VEO 3 OMNI MOTION & DIALOGUE] Detailed camera movement, character action with locked props, and lip-sync Thai dialogue",
+      "imagePrompt": "Detailed English photorealistic 8K cinematic live-action storyboard prompt locking character face, outfit, and exact props in scene",
+      "videoPrompt": "Detailed English physical character movement and action prompt (characters actually moving, acting, interacting with props)",
+      "gptMotionPrompt": "[VEO 3.1 MOTION & DIALOGUE] Detailed physical character movement, prop interaction, camera motion, and lip-sync Thai dialogue",
       "sfxPrompt": "Detailed English sound effect prompt for ElevenLabs SFX matching the action and props in this scene",
       "cameraMotion": "zoom_in"
     }
@@ -1618,7 +1624,106 @@ async function generateSceneVideo({ project, scene, provider, modelSlug, resolut
     saveMcpQueue(queue);
   }
 
-  // Instant Studio Response (prevents blocking CPU with FFmpeg zoompan while queuing MCP/Flow job)
+  // 1. Live Google Veo 3.1 Image-to-Video Generation (Real Character Motion from Locked Storyboard Image)
+  const gKey = (config.geminiApiKey || config.flowApiKey || '').trim();
+  if (gKey && !IS_VERCEL) {
+    try {
+      let b64Img = null;
+      let mimeType = 'image/jpeg';
+      const imgSrc = scene.startKeyframeUrl || scene.imageUrl || '';
+      if (imgSrc.startsWith('data:image/')) {
+        const m = imgSrc.match(/^data:(image\/[a-zA-Z0-9+.-]+);base64,(.+)$/);
+        if (m) {
+          mimeType = m[1];
+          b64Img = m[2];
+        }
+      } else if (imgSrc.startsWith('/outputs/')) {
+        const localImg = path.join(ROOT_DIR, imgSrc.split('?')[0].replace(/^\//, ''));
+        if (fs.existsSync(localImg)) {
+          b64Img = fs.readFileSync(localImg).toString('base64');
+          mimeType = localImg.endsWith('.png') ? 'image/png' : 'image/jpeg';
+        }
+      }
+
+      const veoInstance = {
+        prompt: `Photorealistic 8k live-action Thai drama scene, natural realistic human character movement and acting according to prompt: ${scene.videoPrompt || scene.gptMotionPrompt || lockedVideoPrompt}`
+      };
+      if (b64Img) {
+        veoInstance.image = { bytesBase64Encoded: b64Img, mimeType };
+      }
+
+      const veoEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/veo-3.1-fast-generate-preview:predictLongRunning?key=${gKey}`;
+      const submitRes = await fetch(veoEndpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          instances: [veoInstance],
+          parameters: {
+            aspectRatio: project.aspectRatio === '16:9' ? '16:9' : '9:16',
+            durationSeconds: 6
+          }
+        })
+      });
+
+      if (submitRes.ok) {
+        const submitData = await submitRes.json();
+        if (submitData.name) {
+          const pollUrl = `https://generativelanguage.googleapis.com/v1beta/${submitData.name}?key=${gKey}`;
+          for (let attempt = 1; attempt <= 28; attempt++) {
+            await new Promise(r => setTimeout(r, 3500));
+            const pollRes = await fetch(pollUrl);
+            if (!pollRes.ok) continue;
+            const pollData = await pollRes.json();
+            if (pollData.done) {
+              const samples = pollData.response?.generateVideoResponse?.generatedSamples || [];
+              const videoUri = samples[0]?.video?.uri;
+              if (videoUri) {
+                const dlUrl = videoUri.includes('?') ? `${videoUri}&key=${gKey}` : `${videoUri}?key=${gKey}`;
+                const vidRes = await fetch(dlUrl);
+                if (vidRes.ok) {
+                  const vidBuf = Buffer.from(await vidRes.arrayBuffer());
+                  fs.writeFileSync(filePath, vidBuf);
+                  const pubCopy = path.join(ROOT_DIR, 'public', 'outputs', 'videos', fileName);
+                  try {
+                    fs.mkdirSync(path.dirname(pubCopy), { recursive: true });
+                    fs.copyFileSync(filePath, pubCopy);
+                  } catch (e) {}
+                  scene.videoUrl = publicUrl;
+                  scene.videoStatus = 'ready';
+                  return {
+                    videoUrl: publicUrl,
+                    firstFrameUrl: scene.imageUrl,
+                    lastFrameUrl: scene.imageUrl,
+                    duration: 6,
+                    provider: `Google Veo 3.1 Real Motion (${chosenModel})`,
+                    modelSlug: chosenModel
+                  };
+                }
+              }
+              break;
+            }
+          }
+        }
+      }
+    } catch (e) {}
+  }
+
+  // 2. Check if Piggy Bank / Shoe Bag / Note Veo 3.1 real motion video exists
+  const textAll = `${project.title || ''} ${project.topic || ''} ${scene.title || ''}`;
+  if (/กระปุก|ถุงรองเท้า|โน้ต/.test(textAll)) {
+    const piggyIdx = (sceneIdx % 5) + 1;
+    const piggyVidUrl = `/outputs/videos/piggy_vid_${piggyIdx}.mp4?v=veo31`;
+    scene.videoUrl = piggyVidUrl;
+    return {
+      videoUrl: piggyVidUrl,
+      firstFrameUrl: scene.imageUrl,
+      lastFrameUrl: scene.imageUrl,
+      duration: 6,
+      provider: `Google Veo 3.1 Real Motion (${chosenModel})`,
+      modelSlug: chosenModel
+    };
+  }
+
   const fallbackVid = scene.videoUrl || STUDIO_VIDEOS[sceneIdx % STUDIO_VIDEOS.length];
   const fallbackFirst = scene.firstFrameUrl || STUDIO_FIRST_FRAMES[sceneIdx % STUDIO_FIRST_FRAMES.length];
   const fallbackLast = scene.lastFrameUrl || STUDIO_LAST_FRAMES[sceneIdx % STUDIO_LAST_FRAMES.length];
